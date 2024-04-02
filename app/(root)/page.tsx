@@ -1,3 +1,9 @@
+import WidthWrapper from "@/components/WidthWrapper";
+
 export default function Home() {
-  return <p>Hello World!</p>;
+  return (
+    <WidthWrapper>
+      <p>Hello World!</p>
+    </WidthWrapper>
+  );
 }
