@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useStoreModal } from "@/hooks/use-store-modal";
 import Modal from "@/components/ui/modal";
 import { z } from "zod";
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import Spinner from "@/components/Spinner";
+import { useToast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -26,6 +28,7 @@ const storeModal = () => {
   const storeModal = useStoreModal();
 
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,6 +39,21 @@ const storeModal = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     //TODO: Create Store
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/stores", values);
+      //window.location.assign(`/${response.data.id}`);
+      toast({ description: "Store created successfully" });
+    } catch (error) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong",
+        description: "There was a problem with your request",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,7 +94,7 @@ const storeModal = () => {
                     Cancel
                   </Button>
                   <Button disabled={loading} type="submit">
-                    Continue {loading && <Spinner />}
+                    Continue&nbsp; {loading && <Spinner />}
                   </Button>
                 </div>
               </form>

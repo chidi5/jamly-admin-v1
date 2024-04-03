@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ClerkProvider } from "@clerk/nextjs";
 import ModalProvider from "@/providers/modal-provider";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={cn("relative h-full antialiased", inter.className)}>
+          <Toaster />
           <ModalProvider />
           <main className="relative flex flex-col min-h-screen h-full">
             <div className="flex-grow flex-1">{children}</div>
