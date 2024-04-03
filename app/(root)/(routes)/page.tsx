@@ -15,5 +15,5 @@ export default function Home() {
       onOpen();
     }
   }, [isOpen, onOpen]);
-  return <WidthWrapper>Root Page</WidthWrapper>;
+  return null;
 }
