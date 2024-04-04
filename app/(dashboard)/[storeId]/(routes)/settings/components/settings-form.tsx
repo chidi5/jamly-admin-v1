@@ -21,6 +21,10 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Spinner from "@/components/Spinner";
+import axios from "axios";
+import { AlertModal } from "@/components/modals/alert-modal";
+import { ApiAlert } from "@/components/ui/api-alert";
+import { useOrigin } from "@/hooks/use-origin";
 
 type SettingsFormProps = {
   initialData: Store;
@@ -35,7 +39,7 @@ type SettingsFormValues = z.infer<typeof formSchema>;
 const SettingsForm = ({ initialData }: SettingsFormProps) => {
   const params = useParams();
   const router = useRouter();
-  //const origin = useOrigin();
+  const origin = useOrigin();
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,8 +53,8 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
     try {
       setLoading(true);
       console.log(data);
-      //await axios.patch(`/api/stores/${params.storeId}`, data);
-      //router.refresh();
+      await axios.patch(`/api/stores/${params.storeId}`, data);
+      router.refresh();
       toast({ description: "Store updated." });
     } catch (error: any) {
       toast({
@@ -63,8 +67,33 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
     }
   };
 
+  const onDelete = async () => {
+    try {
+      setLoading(true);
+      await axios.delete(`/api/stores/${params.storeId}`);
+      router.refresh();
+      router.push("/");
+      toast({ description: "Store deleted." });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong",
+        description: "Make sure you removed all products and categories first.",
+      });
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
+
   return (
     <>
+      <AlertModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onConfirm={onDelete}
+        loading={loading}
+      />
       <div className="flex items-center justify-between">
         <Heading
           title="Store settings"
@@ -110,7 +139,13 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
           </Button>
         </form>
       </Form>
+
       <Separator />
+      <ApiAlert
+        title="NEXT_PUBLIC_API_URL"
+        variant="public"
+        description={`${origin}/api/${params.storeId}`}
+      />
     </>
   );
 };
