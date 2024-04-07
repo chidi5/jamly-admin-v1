@@ -1,6 +1,8 @@
 "use client";
 
-import { Heading } from "@/components/ui/heading";
+import Spinner from "@/components/Spinner";
+import { AlertModal } from "@/components/modals/alert-modal";
+import { ApiAlert } from "@/components/ui/api-alert";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,21 +12,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
+import { useOrigin } from "@/hooks/use-origin";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Store } from "@prisma/client";
+import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Spinner from "@/components/Spinner";
-import axios from "axios";
-import { AlertModal } from "@/components/modals/alert-modal";
-import { ApiAlert } from "@/components/ui/api-alert";
-import { useOrigin } from "@/hooks/use-origin";
 
 type SettingsFormProps = {
   initialData: Store;
@@ -71,8 +71,8 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
     try {
       setLoading(true);
       await axios.delete(`/api/stores/${params.storeId}`);
-      router.refresh();
       router.push("/");
+      router.refresh();
       toast({ description: "Store deleted." });
     } catch (error: any) {
       toast({
