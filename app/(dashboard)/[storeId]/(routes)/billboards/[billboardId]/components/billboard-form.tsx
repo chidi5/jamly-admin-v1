@@ -71,8 +71,8 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
       } else {
         await axios.post(`/api/${params.storeId}/billboards`, data);
       }
-      router.refresh();
       router.push(`/${params.storeId}/billboards`);
+      router.refresh();
       toast({ description: toastMessage });
     } catch (error: any) {
       toast({
@@ -173,7 +173,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
             />
           </div>
           <Button disabled={loading} className="ml-auto" type="submit">
-            {action} {loading && <Spinner />}
+            {action}&nbsp; {loading && <Spinner />}
           </Button>
         </form>
       </Form>
