@@ -1,10 +1,11 @@
 "use client";
 
 import axios from "axios";
-import { useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
+import { AlertModal } from "@/components/modals/alert-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,10 +14,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AlertModal } from "@/components/modals/alert-modal";
 
-import { CategoryColumn } from "./columns";
 import { toast } from "@/components/ui/use-toast";
+import { CategoryColumn } from "./columns";
 
 interface CellActionProps {
   data: CategoryColumn;
