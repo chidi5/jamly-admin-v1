@@ -28,7 +28,7 @@ model Store {
 model Billboard {
   id         String     @id @default(uuid())
   storeId    String
-  store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id])
+  store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id], onDelete: Cascade)
   label      String
   imageUrl   String
   categories Category[]
@@ -41,7 +41,7 @@ model Billboard {
 model Category {
   id          String    @id @default(uuid())
   storeId     String // Foreign Key to Store
-  store       Store     @relation("StoreToCategory", fields: [storeId], references: [id])
+  store       Store     @relation("StoreToCategory", fields: [storeId], references: [id], onDelete: Cascade)
   billboardId String // Foreign Key to Billboard
   billboard   Billboard @relation(fields: [billboardId], references: [id])
   name        String
@@ -56,13 +56,14 @@ model Category {
 model Product {
   id         String      @id @default(uuid())
   storeId    String // Foreign Key to Store
-  store      Store       @relation("StoreToProduct", fields: [storeId], references: [id])
+  store      Store       @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
   categoryId String // Foreign Key to Category
   category   Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
   name       String
   price      Decimal
   isFeatured Boolean     @default(false)
   isArchived Boolean     @default(false)
+  variants   Variant[] // Relation to Variant model
   images     Image[] // Relation to Image model
   orderItems OrderItem[] // Relation to Order model
   createdAt  DateTime    @default(now())
@@ -75,7 +76,7 @@ model Product {
 model Order {
   id         String      @id @default(uuid())
   storeId    String // Foreign Key to Store
-  store      Store       @relation("StoreToOrder", fields: [storeId], references: [id])
+  store      Store       @relation("StoreToOrder", fields: [storeId], references: [id], onDelete: Cascade)
   orderItems OrderItem[] // Relation to OrderItem model
   isPaid     Boolean     @default(false)
   phone      String      @default("")
@@ -90,12 +91,40 @@ model Order {
 model OrderItem {
   id        String  @id @default(uuid())
   orderId   String // Foreign Key to Order
-  order     Order   @relation(fields: [orderId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String // Foreign Key to Product
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([productId])
+}
+
+model Variant {
+  id              String        @id @default(uuid())
+  title           String
+  productId       String // Foreign key to Product
+  product         Product       @relation(fields: [productId], references: [id])
+  price           Decimal
+  inventory       Int
+  selectedOptions OptionValue[] @relation("VariantOptions") // Relation to OptionValues
+
+  @@index([productId])
+}
+
+model Option {
+  id     String        @id @default(uuid())
+  name   String
+  values OptionValue[] // An Option has many OptionValues
+}
+
+model OptionValue {
+  id       String    @id @default(uuid())
+  value    String
+  optionId String
+  option   Option    @relation(fields: [optionId], references: [id])
+  variants Variant[] @relation("VariantOptions")
+
+  @@index([optionId])
 }
 
 model Image {

@@ -28,7 +28,7 @@ export default async function DashboardLayout({
   return (
     <>
       <Navbar />
-      <WidthWrapper className="lg:px-10 pt-8">{children}</WidthWrapper>
+      <WidthWrapper className="lg:px-10 py-8">{children}</WidthWrapper>
     </>
   );
 }
