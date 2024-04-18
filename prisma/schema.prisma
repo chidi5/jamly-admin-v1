@@ -103,7 +103,7 @@ model Variant {
   id              String        @id @default(uuid())
   title           String
   productId       String // Foreign key to Product
-  product         Product       @relation(fields: [productId], references: [id])
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
   price           Decimal
   inventory       Int
   selectedOptions OptionValue[] @relation("VariantOptions") // Relation to OptionValues

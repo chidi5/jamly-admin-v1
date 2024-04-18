@@ -1,9 +1,8 @@
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
 
-const layout = async ({ children }: { children: ReactNode }) => {
+export default async function Home() {
   const { userId } = auth();
 
   if (!userId) redirect("/sign-in");
@@ -14,9 +13,11 @@ const layout = async ({ children }: { children: ReactNode }) => {
     },
   });
 
-  if (store) redirect(`/${store.id}`);
+  if (store) {
+    redirect(`/store/${store.id}`);
+  } else {
+    redirect("/welcome");
+  }
 
-  return <div>{children}</div>;
-};
-
-export default layout;
+  return null;
+}

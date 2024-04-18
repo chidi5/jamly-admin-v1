@@ -14,34 +14,34 @@ export function NavItem({
 
   const routes = [
     {
-      href: `/${params.storeId}`,
+      href: `/store/${params.storeId}`,
       label: "Overview",
-      active: pathname === `/${params.storeId}`,
+      active: pathname === `/store/${params.storeId}`,
     },
     {
-      href: `/${params.storeId}/billboards`,
+      href: `/store/${params.storeId}/billboards`,
       label: "Billboards",
-      active: pathname === `/${params.storeId}/billboards`,
+      active: pathname === `/store/${params.storeId}/billboards`,
     },
     {
-      href: `/${params.storeId}/categories`,
+      href: `/store/${params.storeId}/categories`,
       label: "Categories",
-      active: pathname === `/${params.storeId}/categories`,
+      active: pathname === `/store/${params.storeId}/categories`,
     },
     {
-      href: `/${params.storeId}/products`,
+      href: `/store/${params.storeId}/products`,
       label: "Products",
-      active: pathname === `/${params.storeId}/products`,
+      active: pathname === `/store/${params.storeId}/products`,
     },
     {
-      href: `/${params.storeId}/orders`,
+      href: `/store/${params.storeId}/orders`,
       label: "Orders",
-      active: pathname === `/${params.storeId}/orders`,
+      active: pathname === `/store/${params.storeId}/orders`,
     },
     {
-      href: `/${params.storeId}/settings`,
+      href: `/store/${params.storeId}/settings`,
       label: "Settings",
-      active: pathname === `/${params.storeId}/settings`,
+      active: pathname === `/store/${params.storeId}/settings`,
     },
   ];
 

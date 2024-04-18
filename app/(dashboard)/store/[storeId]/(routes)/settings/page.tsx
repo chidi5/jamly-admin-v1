@@ -20,7 +20,7 @@ const SettingsPage = async ({ params }: SettingsProps) => {
     },
   });
 
-  if (!store) redirect("/");
+  if (!store) redirect("/store");
 
   return (
     <div className="flex-col">
