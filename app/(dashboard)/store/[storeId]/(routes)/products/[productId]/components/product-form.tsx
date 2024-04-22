@@ -233,7 +233,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       } else {
         await axios.post(`/api/${params.storeId}/products`, data);
       }
-      router.push(`/${params.storeId}/products`);
+      router.push(`/store/${params.storeId}/products`);
       router.refresh();
       toast({ description: toastMessage });
     } catch (error: any) {
@@ -251,7 +251,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     try {
       setLoading(true);
       await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
-      router.push(`/${params.storeId}/products`);
+      router.push(`/store/${params.storeId}/products`);
       router.refresh();
       toast({ description: "Product deleted." });
     } catch (error: any) {

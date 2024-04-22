@@ -76,7 +76,7 @@ const BillboardForm = ({ initialData, billboards }: CategoryFormProps) => {
       } else {
         await axios.post(`/api/${params.storeId}/categories`, data);
       }
-      router.push(`/${params.storeId}/categories`);
+      router.push(`/store/${params.storeId}/categories`);
       router.refresh();
       toast({ description: toastMessage });
     } catch (error: any) {
@@ -96,7 +96,7 @@ const BillboardForm = ({ initialData, billboards }: CategoryFormProps) => {
       await axios.delete(
         `/api/${params.storeId}/categories/${params.categoryId}`
       );
-      router.push(`/${params.storeId}/categories`);
+      router.push(`/store/${params.storeId}/categories`);
       router.refresh();
       toast({ description: "Category deleted." });
     } catch (error: any) {

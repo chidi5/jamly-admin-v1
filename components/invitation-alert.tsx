@@ -6,7 +6,11 @@ import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { getInviteId, revokeInvitation } from "@/lib/queries";
+import {
+  getInviteId,
+  revokeInvitation,
+  saveActivityLogsNotification,
+} from "@/lib/queries";
 import { toast } from "./ui/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -20,7 +24,11 @@ const InvitationAlert = async ({ data }: InvitationProps) => {
   const handleRevoke = async (value: any) => {
     try {
       const invitation_id = await getInviteId(data);
-      await revokeInvitation(value.id, invitation_id?.id);
+      const res = await revokeInvitation(value.id, invitation_id?.id);
+      await saveActivityLogsNotification({
+        storeId: value.storeId,
+        description: `Revoked ${res.email}`,
+      });
       router.refresh();
       toast({
         title: "Success",

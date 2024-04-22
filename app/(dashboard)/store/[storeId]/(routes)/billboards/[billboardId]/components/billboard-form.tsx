@@ -71,7 +71,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
       } else {
         await axios.post(`/api/${params.storeId}/billboards`, data);
       }
-      router.push(`/${params.storeId}/billboards`);
+      router.push(`/store/${params.storeId}/billboards`);
       router.refresh();
       toast({ description: toastMessage });
     } catch (error: any) {
@@ -91,7 +91,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
       await axios.delete(
         `/api/${params.storeId}/billboards/${params.billboardId}`
       );
-      router.push(`/${params.storeId}/billboards`);
+      router.push(`/store/${params.storeId}/billboards`);
       router.refresh();
       toast({ description: "Billboard deleted." });
     } catch (error: any) {
