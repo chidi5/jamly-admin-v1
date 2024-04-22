@@ -13,12 +13,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
+import ImageUpload from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
 import { useOrigin } from "@/hooks/use-origin";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Store } from "@prisma/client";
+import { Store, User } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -28,15 +29,24 @@ import { z } from "zod";
 
 type SettingsFormProps = {
   initialData: Store;
+  user: User;
 };
 
 const formSchema = z.object({
   name: z.string().min(2),
+  storeLogo: z.string().min(1),
+  companyEmail: z.string().email("Invalid email format"),
+  companyPhone: z.string().min(1),
+  address: z.string().min(1),
+  city: z.string().min(1),
+  zipCode: z.string().min(1),
+  state: z.string().min(1),
+  country: z.string().min(1),
 });
 
 type SettingsFormValues = z.infer<typeof formSchema>;
 
-const SettingsForm = ({ initialData }: SettingsFormProps) => {
+const SettingsForm = ({ initialData, user }: SettingsFormProps) => {
   const params = useParams();
   const router = useRouter();
   const origin = useOrigin();
@@ -46,7 +56,29 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: initialData
+      ? {
+          ...initialData,
+          storeLogo: initialData?.storeLogo || undefined,
+          companyEmail: initialData?.companyEmail || undefined,
+          companyPhone: initialData?.companyPhone || undefined,
+          address: initialData?.address || undefined,
+          city: initialData?.city || undefined,
+          zipCode: initialData?.zipCode || undefined,
+          state: initialData?.state || undefined,
+          country: initialData?.country || undefined,
+        }
+      : {
+          name: "",
+          storeLogo: "",
+          companyEmail: "",
+          companyPhone: "",
+          address: "",
+          city: "",
+          zipCode: "",
+          state: "",
+          country: "",
+        },
   });
 
   const onSubmit = async (data: SettingsFormValues) => {
@@ -99,14 +131,16 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
           title="Store settings"
           description="Manage store preferences"
         />
-        <Button
-          disabled={loading}
-          variant="destructive"
-          size="sm"
-          onClick={() => setOpen(true)}
-        >
-          <Trash className="h-4 w-4" />
-        </Button>
+        {user.role !== "STAFF_USER" && (
+          <Button
+            disabled={loading}
+            variant="destructive"
+            size="sm"
+            onClick={() => setOpen(true)}
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <Separator />
@@ -115,6 +149,24 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-8 w-full"
         >
+          <FormField
+            control={form.control}
+            name="storeLogo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Store Logo</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    value={field.value ? [field.value] : []}
+                    disabled={loading}
+                    onChange={(url) => field.onChange(url)}
+                    onRemove={() => field.onChange("")}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="grid grid-cols-3 gap-8">
             <FormField
               control={form.control}
@@ -126,6 +178,118 @@ const SettingsForm = ({ initialData }: SettingsFormProps) => {
                     <Input
                       disabled={loading}
                       placeholder="Store name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="companyEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      disabled={loading}
+                      placeholder="Company Email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="companyPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Company Phone"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Address"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input disabled={loading} placeholder="City" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <Input disabled={loading} placeholder="State" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Zipcode</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Zip Code"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Country"
                       {...field}
                     />
                   </FormControl>

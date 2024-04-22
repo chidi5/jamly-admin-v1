@@ -15,9 +15,10 @@ const Navbar = async () => {
 
   const stores = await prismadb.store.findMany({
     where: {
-      userId,
+      AND: [{ users: { some: { id: userId } } }],
     },
   });
+
   return (
     <div className="bg-white sticky z-50 top-0 inset-x-0 h-16">
       <header className="relative border-b">

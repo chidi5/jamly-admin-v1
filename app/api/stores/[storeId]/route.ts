@@ -11,14 +11,36 @@ export async function PATCH(
     const { userId } = auth();
     const body = await request.json();
 
-    const { name } = body;
+    const {
+      name,
+      storeLogo,
+      companyEmail,
+      companyPhone,
+      address,
+      city,
+      zipCode,
+      state,
+      country,
+    } = body;
 
     if (!userId) {
       return new NextResponse("Unauthenticated", { status: 403 });
     }
 
-    if (!name) {
-      return new NextResponse("Name is required", { status: 400 });
+    if (
+      !name ||
+      !companyEmail ||
+      !companyPhone ||
+      !address ||
+      !city ||
+      !zipCode ||
+      !state ||
+      !country
+    ) {
+      return new NextResponse(
+        "Name | companyEmail | companyPhone | address | city | state | zip code | country is required",
+        { status: 400 }
+      );
     }
 
     if (!params.storeId) {
@@ -28,10 +50,17 @@ export async function PATCH(
     const store = await prismadb.store.updateMany({
       where: {
         id: params.storeId,
-        userId,
       },
       data: {
         name,
+        storeLogo,
+        companyEmail,
+        companyPhone,
+        address,
+        city,
+        zipCode,
+        state,
+        country,
       },
     });
 
@@ -60,7 +89,6 @@ export async function DELETE(
     const store = await prismadb.store.deleteMany({
       where: {
         id: params.storeId,
-        userId,
       },
     });
 

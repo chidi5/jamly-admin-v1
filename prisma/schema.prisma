@@ -9,20 +9,54 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  //provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  STORE_OWNER
+  STAFF_USER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  avatarUrl String   @db.Text
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  role      Role     @default(STAFF_USER)
+  storeId   String?
+  Store     Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+}
+
 model Store {
-  id         String      @id @default(uuid())
-  name       String
-  userId     String
-  billboards Billboard[] @relation("StoreToBillboard")
-  categories Category[]  @relation("StoreToCategory")
-  products   Product[]   @relation("StoreToProduct")
-  orders     Order[]     @relation("StoreToOrder")
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id               String         @id @default(uuid())
+  connectAccountId String?        @default("")
+  customerId       String?        @default("")
+  name             String
+  //userId     String
+  storeLogo        String?        @db.Text
+  companyEmail     String?        @db.Text
+  companyPhone     String?
+  address          String?
+  city             String?
+  zipCode          String?
+  state            String?
+  country          String?
+  users            User[]
+  billboards       Billboard[]    @relation("StoreToBillboard")
+  categories       Category[]     @relation("StoreToCategory")
+  products         Product[]      @relation("StoreToProduct")
+  orders           Order[]        @relation("StoreToOrder")
+  Invitation       Invitation[]
+  Notification     Notification[]
+  Subscription     Subscription?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model Billboard {
@@ -136,4 +170,57 @@ model Image {
   updatedAt DateTime @updatedAt
 
   @@index([productId])
+}
+
+enum InvitationStatus {
+  ACCEPTED
+  REVOKED
+  PENDING
+}
+
+model Invitation {
+  id      String           @id @default(uuid())
+  email   String           @unique
+  storeId String
+  Store   Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  status  InvitationStatus @default(PENDING)
+  role    Role             @default(STAFF_USER)
+
+  @@index([storeId])
+}
+
+model Notification {
+  id           String @id @default(uuid())
+  notification String
+  storeId      String
+  Store        Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
+}
+
+enum Plan {
+  price_1OYxkqFj9oKEERu1NbKUxXxN
+  price_1OYxkqFj9oKEERu1KfJGWxgN
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  plan      Plan?
+  price     String?
+  active    Boolean  @default(false)
+
+  priceId              String
+  customerId           String
+  currentPeriodEndDate DateTime
+  subscritiptionId     String   @unique
+
+  storeId String? @unique
+  Store   Store?  @relation(fields: [storeId], references: [id])
+
+  @@index([customerId])
 }

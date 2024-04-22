@@ -1,7 +1,7 @@
 import prismadb from "@/lib/prismadb";
+import { getUser } from "@/lib/queries";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import React from "react";
 import SettingsForm from "./components/settings-form";
 
 type SettingsProps = {
@@ -13,10 +13,13 @@ const SettingsPage = async ({ params }: SettingsProps) => {
 
   if (!userId) redirect("/sign-in");
 
+  const user = await getUser(userId);
+
+  if (!user) redirect("/sign-in");
+
   const store = await prismadb.store.findFirst({
     where: {
-      id: params.storeId,
-      userId,
+      AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
     },
   });
 
@@ -25,7 +28,7 @@ const SettingsPage = async ({ params }: SettingsProps) => {
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4">
-        <SettingsForm initialData={store} />
+        <SettingsForm initialData={store} user={user} />
       </div>
     </div>
   );

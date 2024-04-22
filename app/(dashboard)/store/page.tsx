@@ -1,23 +1,21 @@
-import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs";
+import { getAuthUserDetails, verifyAndAcceptInvitation } from "@/lib/queries";
+import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
-export default async function Home() {
-  const { userId } = auth();
+const LandingPage = async () => {
+  const user = await currentUser();
 
-  if (!userId) redirect("/sign-in");
+  if (!user) redirect("/sign-in");
 
-  const store = await prismadb.store.findFirst({
-    where: {
-      userId,
-    },
-  });
+  const storeId = await verifyAndAcceptInvitation();
 
-  if (store) {
-    redirect(`/store/${store.id}`);
+  if (storeId) {
+    redirect(`/store/${storeId}`);
   } else {
     redirect("/welcome");
   }
 
   return null;
-}
+};
+
+export default LandingPage;

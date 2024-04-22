@@ -39,6 +39,11 @@ export function NavItem({
       active: pathname === `/store/${params.storeId}/orders`,
     },
     {
+      href: `/store/${params.storeId}/team`,
+      label: "Team",
+      active: pathname === `/store/${params.storeId}/team`,
+    },
+    {
       href: `/store/${params.storeId}/settings`,
       label: "Settings",
       active: pathname === `/store/${params.storeId}/settings`,

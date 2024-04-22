@@ -1,17 +1,23 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs";
+import { getUser, initUser } from "@/lib/queries";
+import { auth, currentUser } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
     const body = await request.json();
 
     const { name } = body;
 
-    if (!userId) {
+    if (!user) {
       return new NextResponse("Unauthorized", { status: 403 });
     }
+
+    const userData =
+      (await getUser(user.id)) ?? (await initUser({ role: "STORE_OWNER" }));
+
+    //const newUserData = await initUser({ role: "STORE_OWNER" });
 
     if (!name) {
       return new NextResponse("Name is required", { status: 400 });
@@ -20,7 +26,7 @@ export async function POST(request: NextRequest) {
     const store = await prismadb.store.create({
       data: {
         name,
-        userId,
+        users: { connect: { id: userData?.id } },
       },
     });
 

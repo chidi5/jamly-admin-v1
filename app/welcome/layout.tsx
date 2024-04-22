@@ -1,21 +1,22 @@
 import prismadb from "@/lib/prismadb";
-import { auth } from "@clerk/nextjs";
+import { verifyAndAcceptInvitation } from "@/lib/queries";
+import { auth, currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
-import DashboardLayout from "../(dashboard)/store/[storeId]/layout";
 
 const layout = async ({ children }: { children: ReactNode }) => {
-  const { userId } = auth();
+  const user = await currentUser();
 
-  if (!userId) redirect("/sign-in");
+  if (!user) redirect("/sign-in");
 
-  const store = await prismadb.store.findFirst({
+  /*const store = await prismadb.store.findFirst({
     where: {
-      userId,
+      users: user.id,
     },
-  });
+  });*/
+  const storeId = await verifyAndAcceptInvitation();
 
-  if (store) redirect(`/store/${store.id}`);
+  if (storeId) redirect(`/store/${storeId}`);
 
   return <div>{children}</div>;
 };
