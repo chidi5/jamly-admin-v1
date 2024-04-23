@@ -65,97 +65,102 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 405 });
     }
 
-    const product = await prismadb.product.create({
-      data: {
-        name,
-        price,
-        isFeatured,
-        isArchived,
-        categoryId,
-        storeId: params.storeId,
-        images: {
-          createMany: {
-            data: [...images.map((image: { url: string }) => image)],
+    // Start transaction
+    const product = await prismadb.$transaction(async (prisma) => {
+      const product = await prisma.product.create({
+        data: {
+          name,
+          price,
+          isFeatured,
+          isArchived,
+          categoryId,
+          storeId: params.storeId,
+          images: {
+            createMany: {
+              data: [...images.map((image: { url: string }) => image)],
+            },
           },
         },
-      },
-    });
-
-    // Create options and option values
-    const optionData: any[] = [];
-    for (const option of options) {
-      const newOption = await prismadb.option.create({
-        data: {
-          name: option.optionName,
-        },
       });
 
-      optionData.push(
-        ...option.optionValues.map((value: { name: any }) => ({
-          value: value.name, // Use "name" from optionValues for clarity
-          optionId: newOption.id,
-        }))
-      );
-    }
-
-    if (optionData.length > 0) {
-      await prismadb.optionValue.createMany({
-        data: optionData,
-        skipDuplicates: true,
-      });
-    }
-
-    // Create variants with option references:
-    const promises = optionData.map(async (optionValue) => {
-      return prismadb.optionValue.findFirst({ where: optionValue });
-    });
-
-    const optionValues = await Promise.all(promises);
-
-    const variantData = variants.map(
-      (variant: { title: string; price: any; inventory: any }) => {
-        // Extract potential option values from the variant title
-        const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
-
-        if (splitTitle.length !== 2) {
-          // Handle error: Variant title format incorrect
-          throw new Error(
-            `Variant title "${variant.title}" has invalid format`
-          );
-        }
-
-        const optionValueData = splitTitle.map((value) => ({
-          value,
-        }));
-
-        // Find matching optionValues based on name
-        const selectedOptionValues = optionValueData.map((optionValue) => {
-          const matchingOptionValue = optionValues.find(
-            (data) => data!.value === optionValue.value
-          );
-
-          if (!matchingOptionValue) {
-            throw new Error(`Option value "${optionValue.value}" not found`);
-          }
-
-          return { id: matchingOptionValue.id };
+      // Create options and option values
+      const optionData: any[] = [];
+      for (const option of options) {
+        const newOption = await prisma.option.create({
+          data: {
+            name: option.optionName,
+          },
         });
 
-        return {
-          title: variant.title,
-          price: variant.price,
-          inventory: variant.inventory,
-          productId: product.id,
-          selectedOptions: { connect: selectedOptionValues },
-        };
+        optionData.push(
+          ...option.optionValues.map((value: { name: any }) => ({
+            value: value.name, // Use "name" from optionValues for clarity
+            optionId: newOption.id,
+          }))
+        );
       }
-    );
 
-    await Promise.all(
-      variantData.map((variant: any) =>
-        prismadb.variant.create({ data: variant })
-      )
-    );
+      if (optionData.length > 0) {
+        await prisma.optionValue.createMany({
+          data: optionData,
+          skipDuplicates: true,
+        });
+      }
+
+      // Create variants with option references:
+      const promises = optionData.map(async (optionValue) => {
+        return prisma.optionValue.findFirst({ where: optionValue });
+      });
+
+      const optionValues = await Promise.all(promises);
+
+      const variantData = variants.map(
+        (variant: { title: string; price: any; inventory: any }) => {
+          // Extract potential option values from the variant title
+          const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
+
+          if (splitTitle.length !== 2) {
+            // Handle error: Variant title format incorrect
+            throw new Error(
+              `Variant title "${variant.title}" has invalid format`
+            );
+          }
+
+          const optionValueData = splitTitle.map((value) => ({
+            value,
+          }));
+
+          // Find matching optionValues based on name
+          const selectedOptionValues = optionValueData.map((optionValue) => {
+            const matchingOptionValue = optionValues.find(
+              (data) => data!.value === optionValue.value
+            );
+
+            if (!matchingOptionValue) {
+              throw new Error(`Option value "${optionValue.value}" not found`);
+            }
+
+            return { id: matchingOptionValue.id };
+          });
+
+          return {
+            title: variant.title,
+            price: variant.price,
+            inventory: variant.inventory,
+            productId: product.id,
+            selectedOptions: { connect: selectedOptionValues },
+          };
+        }
+      );
+
+      await Promise.all(
+        variantData.map((variant: any) =>
+          prisma.variant.create({ data: variant })
+        )
+      );
+
+      return product;
+    });
 
     return NextResponse.json(product);
   } catch (error) {

@@ -64,6 +64,7 @@ model Billboard {
   storeId    String
   store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id], onDelete: Cascade)
   label      String
+  isBanner   Boolean    @default(false)
   imageUrl   String
   categories Category[]
   createdAt  DateTime   @default(now())

@@ -3,9 +3,11 @@
 import Spinner from "@/components/Spinner";
 import { AlertModal } from "@/components/modals/alert-modal";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,6 +34,7 @@ type BillboardFormProps = {
 
 const formSchema = z.object({
   label: z.string().min(1),
+  isBanner: z.boolean().default(false).optional(),
   imageUrl: z.string().min(1),
 });
 
@@ -56,6 +59,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       label: "",
+      isBanner: false,
       imageUrl: "",
     },
   });
@@ -168,6 +172,27 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isBanner"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      // @ts-ignore
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Store Banner</FormLabel>
+                    <FormDescription>
+                      This Image will appear on the home page as your Banner
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />

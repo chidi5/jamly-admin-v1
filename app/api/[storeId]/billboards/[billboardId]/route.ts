@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
 
 import prismadb from "@/lib/prismadb";
 import { getAuthUserDetails } from "@/lib/queries";
@@ -73,7 +72,7 @@ export async function PATCH(
 
     const body = await request.json();
 
-    const { label, imageUrl } = body;
+    const { label, isBanner, imageUrl } = body;
 
     if (!user) {
       return new NextResponse("Unauthenticated", { status: 403 });
@@ -107,6 +106,7 @@ export async function PATCH(
       },
       data: {
         label,
+        isBanner,
         imageUrl,
       },
     });

@@ -12,7 +12,7 @@ export async function POST(
 
     const body = await request.json();
 
-    const { label, imageUrl } = body;
+    const { label, isBanner, imageUrl } = body;
 
     if (!userId) {
       return new NextResponse("Unauthenticated", { status: 403 });
@@ -43,6 +43,7 @@ export async function POST(
     const billboard = await prismadb.billboard.create({
       data: {
         label,
+        isBanner,
         imageUrl,
         storeId: params.storeId,
       },
