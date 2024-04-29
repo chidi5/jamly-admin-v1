@@ -17,6 +17,7 @@ import { useStoreModal } from "@/hooks/use-store-modal";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -32,6 +33,7 @@ const storeModal = () => {
 
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,7 +64,8 @@ const storeModal = () => {
       };
       const response = await axios.post("/api/stores", dataToSend);
       toast({ description: "Store created successfully" });
-      window.location.assign(`/store/${response.data.id}`);
+      router.refresh();
+      //window.location.assign(`/store/${response.data.id}`);
     } catch (error) {
       console.log(error);
       toast({

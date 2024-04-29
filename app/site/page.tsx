@@ -8,14 +8,16 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { pricingCards } from "@/lib/constant";
+import { getPlans } from "@/lib/paystack/action";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-const HomePage = () => {
-  const prices = pricingCards.filter((obj) => obj.title !== "Starter");
+const HomePage = async () => {
+  const { data } = await getPlans();
+
   return (
     <>
       <section className="h-full w-full md:pt-44 mt-[-70px] relative flex items-center justify-center flex-col ">
@@ -60,7 +62,7 @@ const HomePage = () => {
               <CardDescription>{pricingCards[0].description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <span className="text-4xl font-bold">$0</span>
+              <span className="text-4xl font-bold">NGN 0</span>
               <span>/ month</span>
             </CardContent>
             <CardFooter className="flex flex-col  items-start gap-4 ">
@@ -76,52 +78,64 @@ const HomePage = () => {
               </div>
               <Link
                 href="/store"
-                className={cn("w-full text-center bg-primary p-2 rounded-md", {
-                  "!bg-muted-foreground": true,
+                className={buttonVariants({
+                  className: cn(
+                    "w-full text-center bg-primary p-2 rounded-md",
+                    {
+                      "!bg-muted-foreground": true,
+                    }
+                  ),
                 })}
               >
                 Get Started
               </Link>
             </CardFooter>
           </Card>
-          {prices.map((card) => (
+          {/*@ts-ignore*/}
+          {data?.map((card) => (
             //WIP: Wire up free product from stripe
             <Card
-              key={card.title}
+              key={card.id}
               className={cn("w-[300px] flex flex-col justify-between", {
-                "border-2 border-primary": card.title === "Jamly Unlimited",
+                "border-2 border-primary": card.name === "Jamly Unlimited",
               })}
             >
               <CardHeader>
                 <CardTitle
                   className={cn("", {
-                    "text-muted-foreground": card.title !== "Jamly Unlimited",
+                    "text-muted-foreground": card.name !== "Jamly Unlimited",
                   })}
                 >
-                  {card.title}
+                  {card.name}
                 </CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+                <CardDescription>
+                  {pricingCards.find((p) => p.title === card.name)?.description}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <span className="text-4xl font-bold">{card.price}</span>
+                <span className="text-4xl font-bold">
+                  NGN {card.amount ? card.amount / 100 : "0"}
+                </span>
                 <span className="text-muted-foreground">
                   <span>/ {card.duration}</span>
                 </span>
               </CardContent>
               <CardFooter className="flex flex-col items-start gap-4">
                 <div>
-                  {card.features.map((feature) => (
-                    <div key={feature} className="flex gap-2">
-                      <Check />
-                      <p>{feature}</p>
-                    </div>
-                  ))}
+                  {pricingCards
+                    .find((c) => c.title === card.name)
+                    ?.features.map((feature) => (
+                      <div key={feature} className="flex gap-2">
+                        <Check />
+                        <p>{feature}</p>
+                      </div>
+                    ))}
                 </div>
                 <Link
-                  href={`/store?plan=${card.id}`}
+                  href={`/store?plan=${card.plan_code}`}
                   className={buttonVariants({
                     className: cn("w-full text-center p-2 rounded-md", {
-                      "!bg-muted-foreground": card.title !== "Jamly Unlimited",
+                      "!bg-muted-foreground": card.name !== "Jamly Unlimited",
                     }),
                   })}
                 >
