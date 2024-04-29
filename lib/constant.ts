@@ -1,0 +1,32 @@
+export const pricingCards = [
+  {
+    id: "1",
+    title: "Starter",
+    description: "Perfect for trying out jamly",
+    price: "Free",
+    duration: "",
+    highlight: "Key features",
+    features: ["2 Team members", "10 product list"],
+    priceId: "",
+  },
+  {
+    id: "2",
+    title: "Jamly Unlimited",
+    description: "The ultimate store kit",
+    price: "NGN 20,000",
+    duration: "month",
+    highlight: "Key features",
+    features: ["Rebilling", "24/7 Support team"],
+    priceId: "PLN_n9u9ypf43pk6vti",
+  },
+  {
+    id: "3",
+    title: "Basic",
+    description: "For serious store owners",
+    price: "NGN 7000",
+    duration: "month",
+    highlight: "Everything in Starter, plus",
+    features: ["Unlimited Product list", "Unlimited Team members"],
+    priceId: "PLN_4elei0drizjfiie",
+  },
+];

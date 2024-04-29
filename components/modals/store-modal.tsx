@@ -1,11 +1,7 @@
 "use client";
 
-import axios from "axios";
-import { useStoreModal } from "@/hooks/use-store-modal";
-import Modal from "@/components/ui/modal";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import Spinner from "@/components/Spinner";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,10 +11,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import Spinner from "@/components/Spinner";
+import Modal from "@/components/ui/modal";
 import { useToast } from "@/components/ui/use-toast";
+import { useStoreModal } from "@/hooks/use-store-modal";
+import { useUser } from "@clerk/nextjs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -26,6 +27,8 @@ const formSchema = z.object({
 
 const storeModal = () => {
   const storeModal = useStoreModal();
+
+  const { user } = useUser();
 
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -40,7 +43,24 @@ const storeModal = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      const response = await axios.post("/api/stores", values);
+      let customerId;
+      const data = {
+        email: user?.emailAddresses[0].emailAddress,
+        first_name: user?.firstName,
+        last_name: user?.lastName,
+        phone: user?.phoneNumbers[0].phoneNumber,
+      };
+      const customerResponse = await axios.post(
+        "/api/paystack/create-customer",
+        data
+      );
+      customerId = customerResponse.data.customerId;
+
+      const dataToSend = {
+        ...values,
+        customerId: customerId,
+      };
+      const response = await axios.post("/api/stores", dataToSend);
       toast({ description: "Store created successfully" });
       window.location.assign(`/store/${response.data.id}`);
     } catch (error) {

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import Spinner from "@/components/Spinner";
 import Modal from "@/components/ui/modal";
 import SendInvitation from "../send-invitation";
 

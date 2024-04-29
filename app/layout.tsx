@@ -1,10 +1,10 @@
+import { Toaster } from "@/components/ui/toaster";
+import { cn } from "@/lib/utils";
+import ModalProvider from "@/providers/modal-provider";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
-import { ClerkProvider } from "@clerk/nextjs";
-import ModalProvider from "@/providers/modal-provider";
-import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const user = await currentUser();
     const body = await request.json();
 
-    const { name } = body;
+    const { name, customerId } = body;
 
     if (!user) {
       return new NextResponse("Unauthorized", { status: 403 });
@@ -23,9 +23,14 @@ export async function POST(request: NextRequest) {
       return new NextResponse("Name is required", { status: 400 });
     }
 
+    if (!customerId) {
+      return new NextResponse("customer ID is required", { status: 400 });
+    }
+
     const store = await prismadb.store.create({
       data: {
         name,
+        customerId,
         users: { connect: { id: userData?.id } },
       },
     });

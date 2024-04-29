@@ -44,6 +44,16 @@ export function NavItem({
       active: pathname === `/store/${params.storeId}/team`,
     },
     {
+      href: `/store/${params.storeId}/launchpad`,
+      label: "Launch Pad",
+      active: pathname === `/store/${params.storeId}/launchpad`,
+    },
+    {
+      href: `/store/${params.storeId}/billing`,
+      label: "Billing",
+      active: pathname === `/store/${params.storeId}/billing`,
+    },
+    {
       href: `/store/${params.storeId}/settings`,
       label: "Settings",
       active: pathname === `/store/${params.storeId}/settings`,
