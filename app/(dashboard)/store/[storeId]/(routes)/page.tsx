@@ -10,7 +10,10 @@ const DashboardPage = ({ params }: { params: { storeId: string } }) => {
       <h3>DashboardPage</h3>
       <Button
         onClick={() =>
-          window.location.replace(`${params.storeId}.localhost:3001`)
+          window.open(
+            `${params.storeId}.${process.env.NEXT_PUBLIC_SUBDOMAIN}`,
+            "_blank"
+          )
         }
         className=" ml-auto"
       >
