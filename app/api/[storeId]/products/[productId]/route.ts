@@ -226,32 +226,42 @@ export async function PATCH(
 
       const variantData = variants.map(
         (variant: { title: string; price: any; inventory: any }) => {
-          // Extract potential option values from the variant title
-          const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
+          let selectedOptionValues = [];
 
-          if (splitTitle.length !== 2) {
-            // Handle error: Variant title format incorrect
-            throw new Error(
-              `Variant title "${variant.title}" has invalid format`
-            );
-          }
+          // Check if the title contains "-"
+          if (variant.title.includes("-")) {
+            const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
 
-          const optionValueData = splitTitle.map((value) => ({
-            value,
-          }));
+            const optionValueData = splitTitle.map((value) => ({
+              value,
+            }));
 
-          // Find matching optionValues based on name
-          const selectedOptionValues = optionValueData.map((optionValue) => {
+            // Find matching optionValues based on name
+            selectedOptionValues = optionValueData.map((optionValue) => {
+              const matchingOptionValue = optionValues.find(
+                (data) => data!.value === optionValue.value
+              );
+
+              if (!matchingOptionValue) {
+                throw new Error(
+                  `Option value "${optionValue.value}" not found`
+                );
+              }
+
+              return { id: matchingOptionValue.id };
+            });
+          } else {
+            // If the title does not contain "-", find the matching optionValue
             const matchingOptionValue = optionValues.find(
-              (data) => data!.value === optionValue.value
+              (data) => data!.value === variant.title
             );
 
             if (!matchingOptionValue) {
-              throw new Error(`Option value "${optionValue.value}" not found`);
+              throw new Error(`Option value "${variant.title}" not found`);
             }
 
-            return { id: matchingOptionValue.id };
-          });
+            selectedOptionValues.push({ id: matchingOptionValue.id });
+          }
 
           return {
             title: variant.title,
