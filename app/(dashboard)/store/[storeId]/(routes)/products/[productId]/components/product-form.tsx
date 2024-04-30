@@ -181,7 +181,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
 
       console.log(formattedOptions);
     }
-  }, [initialData]);
+  }, [initialData, appendOption]);
 
   function generateVariantTitles(options: any[]) {
     let titles: string[] = [];
