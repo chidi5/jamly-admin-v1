@@ -11,7 +11,7 @@ const DashboardPage = ({ params }: { params: { storeId: string } }) => {
       <Button
         onClick={() =>
           window.open(
-            `${params.storeId}.${process.env.NEXT_PUBLIC_SUBDOMAIN}`,
+            `http://${params.storeId}.${process.env.NEXT_PUBLIC_SUBDOMAIN}`,
             "_blank"
           )
         }
