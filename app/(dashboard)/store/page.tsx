@@ -27,7 +27,11 @@ const LandingPage = async ({
       } else return redirect(`/store/${storeId}`);
     }
   } else {
-    redirect(`/welcome?plan=${searchParams.plan}`);
+    if (searchParams.plan) {
+      redirect(`/welcome?plan=${searchParams.plan}`);
+    } else {
+      redirect("/welcome");
+    }
   }
 
   return null;

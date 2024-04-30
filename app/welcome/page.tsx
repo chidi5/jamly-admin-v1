@@ -6,19 +6,9 @@ import { Plan } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: { plan: Plan; state: string; code: string };
-}) {
+export default function Home() {
   const onOpen = useStoreModal((state) => state.onOpen);
   const isOpen = useStoreModal((state) => state.isOpen);
-
-  const storeId = await verifyAndAcceptInvitation();
-
-  if (storeId) {
-    redirect(`/store?plan=${searchParams.plan}`);
-  }
 
   useEffect(() => {
     if (!isOpen) {
