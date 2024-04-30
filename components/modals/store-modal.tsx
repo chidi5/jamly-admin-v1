@@ -68,7 +68,9 @@ const StoreModal = () => {
       const response = await axios.post("/api/stores", dataToSend);
       toast({ description: "Store created successfully" });
       if (plan) {
-        window.location.assign(`/store/${response.data.id}?plan=${plan}`);
+        window.location.assign(
+          `/store/${response.data.id}/billing?plan=${plan}`
+        );
       } else {
         window.location.assign(`/store/${response.data.id}`);
       }
