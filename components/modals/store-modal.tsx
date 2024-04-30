@@ -16,9 +16,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useStoreModal } from "@/hooks/use-store-modal";
 import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plan } from "@prisma/client";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,8 +26,11 @@ const formSchema = z.object({
   name: z.string().min(1),
 });
 
-const StoreModal = ({ searchParams }: { searchParams: { plan: Plan } }) => {
+const StoreModal = () => {
   const storeModal = useStoreModal();
+
+  const searchParams = useSearchParams();
+  const plan = searchParams.get("plan");
 
   const { user } = useUser();
 
@@ -65,10 +67,8 @@ const StoreModal = ({ searchParams }: { searchParams: { plan: Plan } }) => {
       };
       const response = await axios.post("/api/stores", dataToSend);
       toast({ description: "Store created successfully" });
-      if (searchParams.plan) {
-        window.location.assign(
-          `/store/${response.data.id}?plan=${searchParams.plan}`
-        );
+      if (plan) {
+        window.location.assign(`/store/${response.data.id}?plan=${plan}`);
       } else {
         window.location.assign(`/store/${response.data.id}`);
       }
