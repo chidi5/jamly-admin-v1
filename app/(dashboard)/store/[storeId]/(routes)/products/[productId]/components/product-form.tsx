@@ -465,9 +465,8 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
 
           <div className="grid grid-cols-3 gap-8">
             {optionFields.map((option, index) => (
-              <div>
+              <div key={option.id}>
                 <FormField
-                  key={option.id}
                   control={form.control}
                   name={`options.${index}.optionName`}
                   render={({ field }) => (
@@ -615,9 +614,8 @@ const OptionValuesFieldArray = ({
   return (
     <div className="mt-6">
       {optionValueFields.map((item, k) => (
-        <div className="flex space-x-2 items-center">
+        <div key={item.id} className="flex space-x-2 items-center">
           <FormField
-            key={item.id}
             control={form.control}
             name={`options.${nestIndex}.optionValues.${k}.name`}
             render={({ field }) => (
