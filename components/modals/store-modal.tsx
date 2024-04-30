@@ -26,7 +26,7 @@ const formSchema = z.object({
   name: z.string().min(1),
 });
 
-const storeModal = () => {
+const StoreModal = () => {
   const storeModal = useStoreModal();
 
   const { user } = useUser();
@@ -128,4 +128,4 @@ const storeModal = () => {
   );
 };
 
-export default storeModal;
+export default StoreModal;
