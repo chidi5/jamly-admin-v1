@@ -2,6 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 
 import prismadb from "@/lib/prismadb";
+import { Prisma } from "@prisma/client";
+
+export async function GET(
+  req: Request,
+  { params }: { params: { storeId: string } }
+) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const categoryId = searchParams.get("categoryId") || undefined;
+    const isFeatured = searchParams.get("isFeatured");
+
+    if (!params.storeId) {
+      return new NextResponse("Store id is required", { status: 400 });
+    }
+
+    const products = await prismadb.product.findMany({
+      where: {
+        storeId: params.storeId,
+        categoryId,
+        isFeatured: isFeatured ? true : undefined,
+        isArchived: false,
+      },
+      include: {
+        images: true,
+        category: true,
+        variants: {
+          include: {
+            selectedOptions: true, // Include selectedOptions within variants
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(products);
+  } catch (error) {
+    console.log("[PRODUCTS_GET]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -66,156 +108,122 @@ export async function POST(
     }
 
     // Start transaction
-    const product = await prismadb.$transaction(async (prisma) => {
-      const product = await prisma.product.create({
-        data: {
-          name,
-          price,
-          isFeatured,
-          isArchived,
-          categoryId,
-          storeId: params.storeId,
-          images: {
-            createMany: {
-              data: [...images.map((image: { url: string }) => image)],
+    const product = await prismadb.$transaction(
+      async (prisma) => {
+        const product = await prisma.product.create({
+          data: {
+            name,
+            price,
+            isFeatured,
+            isArchived,
+            categoryId,
+            storeId: params.storeId,
+            images: {
+              createMany: {
+                data: [...images.map((image: { url: string }) => image)],
+              },
             },
           },
-        },
-      });
-
-      // Create options and option values
-      const optionData: any[] = [];
-      for (const option of options) {
-        const newOption = await prisma.option.create({
-          data: {
-            name: option.optionName,
-          },
         });
 
-        optionData.push(
-          ...option.optionValues.map((value: { name: any }) => ({
-            value: value.name, // Use "name" from optionValues for clarity
-            optionId: newOption.id,
-          }))
-        );
-      }
+        // Create options and option values
+        const optionData: any[] = [];
+        for (const option of options) {
+          const newOption = await prisma.option.create({
+            data: {
+              name: option.optionName,
+            },
+          });
 
-      if (optionData.length > 0) {
-        await prisma.optionValue.createMany({
-          data: optionData,
-          skipDuplicates: true,
+          optionData.push(
+            ...option.optionValues.map((value: { name: any }) => ({
+              value: value.name, // Use "name" from optionValues for clarity
+              optionId: newOption.id,
+            }))
+          );
+        }
+
+        if (optionData.length > 0) {
+          await prisma.optionValue.createMany({
+            data: optionData,
+            skipDuplicates: true,
+          });
+        }
+
+        // Create variants with option references:
+        const promises = optionData.map(async (optionValue) => {
+          return prisma.optionValue.findFirst({ where: optionValue });
         });
-      }
 
-      // Create variants with option references:
-      const promises = optionData.map(async (optionValue) => {
-        return prisma.optionValue.findFirst({ where: optionValue });
-      });
+        const optionValues = await Promise.all(promises);
 
-      const optionValues = await Promise.all(promises);
+        const variantData = variants.map(
+          (variant: { title: string; price: any; inventory: any }) => {
+            let selectedOptionValues = [];
 
-      const variantData = variants.map(
-        (variant: { title: string; price: any; inventory: any }) => {
-          let selectedOptionValues = [];
+            // Check if the title contains "-"
+            if (variant.title.includes("-")) {
+              const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
 
-          // Check if the title contains "-"
-          if (variant.title.includes("-")) {
-            const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
+              const optionValueData = splitTitle.map((value) => ({
+                value,
+              }));
 
-            const optionValueData = splitTitle.map((value) => ({
-              value,
-            }));
+              // Find matching optionValues based on name
+              selectedOptionValues = optionValueData.map((optionValue) => {
+                const matchingOptionValue = optionValues.find(
+                  (data) => data!.value === optionValue.value
+                );
 
-            // Find matching optionValues based on name
-            selectedOptionValues = optionValueData.map((optionValue) => {
+                if (!matchingOptionValue) {
+                  throw new Error(
+                    `Option value "${optionValue.value}" not found`
+                  );
+                }
+
+                return { id: matchingOptionValue.id };
+              });
+            } else {
+              // If the title does not contain "-", find the matching optionValue
               const matchingOptionValue = optionValues.find(
-                (data) => data!.value === optionValue.value
+                (data) => data!.value === variant.title
               );
 
               if (!matchingOptionValue) {
-                throw new Error(
-                  `Option value "${optionValue.value}" not found`
-                );
+                throw new Error(`Option value "${variant.title}" not found`);
               }
 
-              return { id: matchingOptionValue.id };
-            });
-          } else {
-            // If the title does not contain "-", find the matching optionValue
-            const matchingOptionValue = optionValues.find(
-              (data) => data!.value === variant.title
-            );
-
-            if (!matchingOptionValue) {
-              throw new Error(`Option value "${variant.title}" not found`);
+              selectedOptionValues.push({ id: matchingOptionValue.id });
             }
 
-            selectedOptionValues.push({ id: matchingOptionValue.id });
+            return {
+              title: variant.title,
+              price: variant.price,
+              inventory: variant.inventory,
+              productId: product.id,
+              selectedOptions: { connect: selectedOptionValues },
+            };
           }
+        );
 
-          return {
-            title: variant.title,
-            price: variant.price,
-            inventory: variant.inventory,
-            productId: product.id,
-            selectedOptions: { connect: selectedOptionValues },
-          };
-        }
-      );
+        await Promise.all(
+          variantData.map((variant: any) =>
+            prisma.variant.create({ data: variant })
+          )
+        );
 
-      await Promise.all(
-        variantData.map((variant: any) =>
-          prisma.variant.create({ data: variant })
-        )
-      );
-
-      return product;
-    });
+        return product;
+      },
+      {
+        maxWait: 5000, // default: 2000
+        timeout: 10000, // default: 5000
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
+      }
+    );
 
     return NextResponse.json(product);
   } catch (error) {
     console.log("[PRODUCTS_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
-}
-
-export async function GET(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const categoryId = searchParams.get("categoryId") || undefined;
-    const isFeatured = searchParams.get("isFeatured");
-
-    if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
-    }
-
-    const products = await prismadb.product.findMany({
-      where: {
-        storeId: params.storeId,
-        categoryId,
-        isFeatured: isFeatured ? true : undefined,
-        isArchived: false,
-      },
-      include: {
-        images: true,
-        category: true,
-        variants: {
-          include: {
-            selectedOptions: true, // Include selectedOptions within variants
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return NextResponse.json(products);
-  } catch (error) {
-    console.log("[PRODUCTS_GET]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }
