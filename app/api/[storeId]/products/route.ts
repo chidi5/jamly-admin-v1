@@ -4,47 +4,6 @@ import { auth } from "@clerk/nextjs";
 import prismadb from "@/lib/prismadb";
 import { Prisma } from "@prisma/client";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { storeId: string } }
-) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const categoryId = searchParams.get("categoryId") || undefined;
-    const isFeatured = searchParams.get("isFeatured");
-
-    if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
-    }
-
-    const products = await prismadb.product.findMany({
-      where: {
-        storeId: params.storeId,
-        categoryId,
-        isFeatured: isFeatured ? true : undefined,
-        isArchived: false,
-      },
-      include: {
-        images: true,
-        category: true,
-        variants: {
-          include: {
-            selectedOptions: true, // Include selectedOptions within variants
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return NextResponse.json(products);
-  } catch (error) {
-    console.log("[PRODUCTS_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
-}
-
 export async function POST(
   request: NextRequest,
   { params }: { params: { storeId: string } }
@@ -215,7 +174,7 @@ export async function POST(
         return product;
       },
       {
-        maxWait: 5000, // default: 2000
+        maxWait: 8000, // default: 2000
         timeout: 10000, // default: 5000
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
       }
@@ -224,6 +183,47 @@ export async function POST(
     return NextResponse.json(product);
   } catch (error) {
     console.log("[PRODUCTS_POST]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
+export async function GET(
+  req: Request,
+  { params }: { params: { storeId: string } }
+) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const categoryId = searchParams.get("categoryId") || undefined;
+    const isFeatured = searchParams.get("isFeatured");
+
+    if (!params.storeId) {
+      return new NextResponse("Store id is required", { status: 400 });
+    }
+
+    const products = await prismadb.product.findMany({
+      where: {
+        storeId: params.storeId,
+        categoryId,
+        isFeatured: isFeatured ? true : undefined,
+        isArchived: false,
+      },
+      include: {
+        images: true,
+        category: true,
+        variants: {
+          include: {
+            selectedOptions: true, // Include selectedOptions within variants
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(products);
+  } catch (error) {
+    console.log("[PRODUCTS_GET]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }
