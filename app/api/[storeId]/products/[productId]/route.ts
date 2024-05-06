@@ -20,6 +20,7 @@ export async function GET(
       include: {
         images: true,
         category: true,
+        options: true,
         variants: {
           include: {
             selectedOptions: true, // Include selectedOptions within variants
@@ -170,6 +171,7 @@ export async function PATCH(
             id: {
               in: Array.from(optionIds),
             },
+            productId: params.productId,
           },
         });
 
@@ -200,6 +202,7 @@ export async function PATCH(
         for (const option of options) {
           const newOption = await prisma.option.create({
             data: {
+              productId: params.productId,
               name: option.optionName,
             },
           });

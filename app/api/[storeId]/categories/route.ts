@@ -22,10 +22,6 @@ export async function POST(
       return new NextResponse("Name is required", { status: 400 });
     }
 
-    if (!billboardId) {
-      return new NextResponse("Billboard ID is required", { status: 400 });
-    }
-
     if (!params.storeId) {
       return new NextResponse("Store id is required", { status: 400 });
     }
@@ -43,7 +39,7 @@ export async function POST(
     const category = await prismadb.category.create({
       data: {
         name,
-        billboardId,
+        billboardId: billboardId || null,
         storeId: params.storeId,
       },
     });

@@ -73,15 +73,15 @@ model Billboard {
 }
 
 model Category {
-  id          String    @id @default(uuid())
+  id          String     @id @default(uuid())
   storeId     String // Foreign Key to Store
-  store       Store     @relation("StoreToCategory", fields: [storeId], references: [id], onDelete: Cascade)
-  billboardId String // Foreign Key to Billboard
-  billboard   Billboard @relation(fields: [billboardId], references: [id])
+  store       Store      @relation("StoreToCategory", fields: [storeId], references: [id], onDelete: Cascade)
+  billboardId String? // Foreign Key to Billboard
+  billboard   Billboard? @relation(fields: [billboardId], references: [id])
   name        String
-  products    Product[] @relation("CategoryToProduct")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  products    Product[]  @relation("CategoryToProduct")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([storeId])
   @@index([billboardId])
@@ -97,6 +97,7 @@ model Product {
   price      Decimal
   isFeatured Boolean     @default(false)
   isArchived Boolean     @default(false)
+  options    Option[] // Relation to Option model
   variants   Variant[] // Relation to Variant model
   images     Image[] // Relation to Image model
   orderItems OrderItem[] // Relation to Order model
@@ -146,16 +147,18 @@ model Variant {
 }
 
 model Option {
-  id     String        @id @default(uuid())
-  name   String
-  values OptionValue[] // An Option has many OptionValues
+  id        String        @id @default(uuid())
+  name      String
+  productId String // Foreign key to Product
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values    OptionValue[] // An Option has many OptionValues
 }
 
 model OptionValue {
   id       String    @id @default(uuid())
   value    String
   optionId String
-  option   Option    @relation(fields: [optionId], references: [id])
+  option   Option    @relation(fields: [optionId], references: [id], onDelete: Cascade)
   variants Variant[] @relation("VariantOptions")
 
   @@index([optionId])

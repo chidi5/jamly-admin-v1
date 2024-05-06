@@ -85,10 +85,6 @@ export async function PATCH(
       return new NextResponse("Label is required", { status: 400 });
     }
 
-    if (!billboardId) {
-      return new NextResponse("Billboard ID is required", { status: 400 });
-    }
-
     if (!params.categoryId) {
       return new NextResponse("Category ID is required", { status: 400 });
     }
@@ -109,7 +105,7 @@ export async function PATCH(
       },
       data: {
         name,
-        billboardId,
+        billboardId: billboardId || null,
       },
     });
 

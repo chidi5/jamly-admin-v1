@@ -39,7 +39,7 @@ type CategoryFormProps = {
 
 const formSchema = z.object({
   name: z.string().min(1),
-  billboardId: z.string().min(1),
+  billboardId: z.string().optional(),
 });
 
 type CategoryFormValues = z.infer<typeof formSchema>;
@@ -59,15 +59,23 @@ const BillboardForm = ({ initialData, billboards }: CategoryFormProps) => {
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      name: "",
-      billboardId: "",
-    },
+    defaultValues: initialData
+      ? {
+          ...initialData,
+          billboardId: initialData.billboardId || undefined,
+        }
+      : {
+          name: "",
+          billboardId: "",
+        },
   });
 
   const onSubmit = async (data: CategoryFormValues) => {
     try {
       setLoading(true);
+      if (data.billboardId === " ") {
+        data.billboardId = undefined;
+      }
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/categories/${params.categoryId}`,
@@ -179,6 +187,7 @@ const BillboardForm = ({ initialData, billboards }: CategoryFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value=" ">Select a billboard</SelectItem>
                       {billboards.map((billboard) => (
                         <SelectItem key={billboard.id} value={billboard.id}>
                           {billboard.label}

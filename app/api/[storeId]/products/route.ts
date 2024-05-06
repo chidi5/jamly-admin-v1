@@ -90,6 +90,7 @@ export async function POST(
         for (const option of options) {
           const newOption = await prisma.option.create({
             data: {
+              productId: product.id,
               name: option.optionName,
             },
           });
@@ -210,6 +211,7 @@ export async function GET(
       include: {
         images: true,
         category: true,
+        options: true,
         variants: {
           include: {
             selectedOptions: true, // Include selectedOptions within variants
