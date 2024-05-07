@@ -20,10 +20,18 @@ export async function GET(
       include: {
         images: true,
         category: true,
-        options: true,
+        options: {
+          include: {
+            values: true,
+          },
+        },
         variants: {
           include: {
-            selectedOptions: true, // Include selectedOptions within variants
+            selectedOptions: {
+              include: {
+                option: true,
+              },
+            }, // Include selectedOptions within variants
           },
         },
       },
