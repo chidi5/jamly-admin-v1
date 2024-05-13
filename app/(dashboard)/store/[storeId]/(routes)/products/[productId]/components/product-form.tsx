@@ -31,11 +31,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, Image, Product } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import axios from "axios";
-import { url } from "inspector";
+import "easymde/dist/easymde.min.css";
 import { Plus, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
+import SimpleMDE from "react-simplemde-editor";
 import { z } from "zod";
 
 interface Variant {
@@ -71,6 +72,8 @@ const formSchema = z.object({
   name: z.string().min(1),
   images: z.object({ url: z.string() }).array(),
   price: z.coerce.number().min(1),
+  handle: z.string().min(1),
+  description: z.string().min(1, "Description is required").max(65535),
   categoryId: z.string().min(1),
   isFeatured: z.boolean().default(false).optional(),
   isArchived: z.boolean().default(false).optional(),
@@ -111,6 +114,8 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
           name: "",
           images: [],
           price: 0,
+          handle: "",
+          description: "",
           categoryId: "",
           isFeatured: false,
           isArchived: false,
@@ -194,7 +199,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       }
 
       option.optionValues.forEach((value: { name: any }) => {
-        buildTitles(index + 1, `${prefix}-${value.name}`);
+        buildTitles(index + 1, `${prefix}/${value.name}`);
       });
     }
 
@@ -213,13 +218,22 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       }
     }
 
-    newVariantTitles.forEach((title) =>
+    newVariantTitles.forEach((title) => {
+      const matchingVariant = initialData?.variants?.find(
+        (variant) => variant.title === title
+      );
+
+      const inventory = matchingVariant ? matchingVariant.inventory : 0;
+
       appendVariant({
         title: title,
-        price: 0,
-        inventory: 0,
-      })
-    );
+        price:
+          0 ||
+          parseFloat(String(initialData?.price)) ||
+          form.getValues("price"),
+        inventory: inventory,
+      });
+    });
   };
 
   const onSubmit = async (data: ProductFormValues) => {
@@ -240,7 +254,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong",
-        description: "There was a problem with your request",
+        description: error.message || "There was a problem with your request",
       });
     } finally {
       setLoading(false);
@@ -330,6 +344,29 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                       disabled={loading}
                       placeholder="Product Name"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="handle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Handle</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Product Handle"
+                      {...field}
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+                        const lowerCaseValue = inputValue.toLowerCase();
+                        const noSpaceValue = lowerCaseValue.replace(/\s/g, "");
+                        field.onChange(noSpaceValue);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -429,6 +466,20 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
               )}
             />
           </div>
+
+          <FormField
+            name="description"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <SimpleMDE placeholder="Description" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="flex items-center justify-between">
             <Heading

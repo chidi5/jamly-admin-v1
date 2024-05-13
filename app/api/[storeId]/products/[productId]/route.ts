@@ -6,16 +6,19 @@ import { Prisma } from "@prisma/client";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: { productId: string; storeId: string } }
 ) {
   try {
     if (!params.productId) {
       return new NextResponse("Product id is required", { status: 400 });
     }
 
-    const product = await prismadb.product.findUnique({
+    const product = await prismadb.product.findFirst({
       where: {
-        id: params.productId,
+        OR: [
+          { id: params.productId },
+          { AND: [{ handle: params.productId }, { storeId: params.storeId }] },
+        ],
       },
       include: {
         images: true,
@@ -94,6 +97,8 @@ export async function PATCH(
     const {
       name,
       price,
+      handle,
+      description,
       categoryId,
       images,
       variants,
@@ -124,6 +129,14 @@ export async function PATCH(
 
     if (!price) {
       return new NextResponse("Price is required", { status: 400 });
+    }
+
+    if (!handle) {
+      return new NextResponse("Handle is required", { status: 400 });
+    }
+
+    if (!description) {
+      return new NextResponse("Description is required", { status: 400 });
     }
 
     if (!categoryId) {
@@ -190,6 +203,8 @@ export async function PATCH(
           data: {
             name,
             price,
+            handle,
+            description,
             categoryId,
             images: {
               deleteMany: {},
@@ -241,9 +256,9 @@ export async function PATCH(
           (variant: { title: string; price: any; inventory: any }) => {
             let selectedOptionValues = [];
 
-            // Check if the title contains "-"
-            if (variant.title.includes("-")) {
-              const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
+            // Check if the title contains "/"
+            if (variant.title.includes("/")) {
+              const splitTitle = variant.title.split("/"); // Assuming "/" is the separator
 
               const optionValueData = splitTitle.map((value) => ({
                 value,
@@ -302,8 +317,8 @@ export async function PATCH(
     );
 
     return NextResponse.json(product);
-  } catch (error) {
+  } catch (error: any) {
     console.log("[PRODUCT_PATCH]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(error.message || "Internal error", { status: 500 });
   }
 }

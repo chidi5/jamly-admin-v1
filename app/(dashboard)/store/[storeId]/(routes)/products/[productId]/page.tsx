@@ -1,6 +1,16 @@
 import prismadb from "@/lib/prismadb";
 import React from "react";
-import ProductForm from "./components/product-form";
+import dynamic from "next/dynamic";
+
+const ProductForm = dynamic(
+  () =>
+    import(
+      "@/app/(dashboard)/store/[storeId]/(routes)/products/[productId]/components/product-form"
+    ),
+  {
+    ssr: false,
+  }
+);
 
 const ProductPage = async ({
   params,

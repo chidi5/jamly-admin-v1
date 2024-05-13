@@ -39,6 +39,7 @@ type CategoryFormProps = {
 
 const formSchema = z.object({
   name: z.string().min(1),
+  handle: z.string().min(1),
   billboardId: z.string().optional(),
 });
 
@@ -67,6 +68,7 @@ const BillboardForm = ({ initialData, billboards }: CategoryFormProps) => {
       : {
           name: "",
           billboardId: "",
+          handle: "",
         },
   });
 
@@ -160,6 +162,29 @@ const BillboardForm = ({ initialData, billboards }: CategoryFormProps) => {
                       disabled={loading}
                       placeholder="Category Name"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="handle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Handle</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Category Handle"
+                      {...field}
+                      onChange={(e) => {
+                        const inputValue = e.target.value;
+                        const lowerCaseValue = inputValue.toLowerCase();
+                        const noSpaceValue = lowerCaseValue.replace(/\s/g, "");
+                        field.onChange(noSpaceValue);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

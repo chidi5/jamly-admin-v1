@@ -16,6 +16,8 @@ export async function POST(
     const {
       name,
       price,
+      handle,
+      description,
       categoryId,
       images,
       variants,
@@ -48,6 +50,14 @@ export async function POST(
       return new NextResponse("Price is required", { status: 400 });
     }
 
+    if (!handle) {
+      return new NextResponse("Handle is required", { status: 400 });
+    }
+
+    if (!description) {
+      return new NextResponse("Description is required", { status: 400 });
+    }
+
     if (!categoryId) {
       return new NextResponse("Category id is required", { status: 400 });
     }
@@ -73,6 +83,8 @@ export async function POST(
           data: {
             name,
             price,
+            handle,
+            description,
             isFeatured,
             isArchived,
             categoryId,
@@ -121,9 +133,9 @@ export async function POST(
           (variant: { title: string; price: any; inventory: any }) => {
             let selectedOptionValues = [];
 
-            // Check if the title contains "-"
-            if (variant.title.includes("-")) {
-              const splitTitle = variant.title.split("-"); // Assuming "-" is the separator
+            // Check if the title contains "/"
+            if (variant.title.includes("/")) {
+              const splitTitle = variant.title.split("/"); // Assuming "/" is the separator
 
               const optionValueData = splitTitle.map((value) => ({
                 value,
@@ -182,9 +194,9 @@ export async function POST(
     );
 
     return NextResponse.json(product);
-  } catch (error) {
+  } catch (error: any) {
     console.log("[PRODUCTS_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(error.message || "Internal error", { status: 500 });
   }
 }
 

@@ -60,6 +60,7 @@ CREATE TABLE "Category" (
     "storeId" TEXT NOT NULL,
     "billboardId" TEXT,
     "name" TEXT NOT NULL,
+    "handle" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -72,7 +73,9 @@ CREATE TABLE "Product" (
     "storeId" TEXT NOT NULL,
     "categoryId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "handle" TEXT NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
+    "description" TEXT NOT NULL,
     "isFeatured" BOOLEAN NOT NULL DEFAULT false,
     "isArchived" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -204,10 +207,16 @@ CREATE INDEX "Category_storeId_idx" ON "Category"("storeId");
 CREATE INDEX "Category_billboardId_idx" ON "Category"("billboardId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Category_storeId_handle_key" ON "Category"("storeId", "handle");
+
+-- CreateIndex
 CREATE INDEX "Product_storeId_idx" ON "Product"("storeId");
 
 -- CreateIndex
 CREATE INDEX "Product_categoryId_idx" ON "Product"("categoryId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Product_storeId_handle_key" ON "Product"("storeId", "handle");
 
 -- CreateIndex
 CREATE INDEX "Order_storeId_idx" ON "Order"("storeId");

@@ -5,16 +5,19 @@ import prismadb from "@/lib/prismadb";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  { params }: { params: { categoryId: string; storeId: string } }
 ) {
   try {
     if (!params.categoryId) {
       return new NextResponse("Category id is required", { status: 400 });
     }
 
-    const category = await prismadb.category.findUnique({
+    const category = await prismadb.category.findFirst({
       where: {
-        id: params.categoryId,
+        OR: [
+          { id: params.categoryId },
+          { AND: [{ handle: params.categoryId }, { storeId: params.storeId }] },
+        ],
       },
       include: {
         billboard: true,

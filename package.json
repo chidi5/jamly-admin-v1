@@ -37,6 +37,7 @@
     "react-easy-sort": "^1.6.0",
     "react-hook-form": "^7.51.2",
     "react-paystack": "^5.0.0",
+    "react-simplemde-editor": "^5.2.0",
     "react-spinners": "^0.13.8",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",

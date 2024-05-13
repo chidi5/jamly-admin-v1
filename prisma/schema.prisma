@@ -79,31 +79,36 @@ model Category {
   billboardId String? // Foreign Key to Billboard
   billboard   Billboard? @relation(fields: [billboardId], references: [id])
   name        String
+  handle      String
   products    Product[]  @relation("CategoryToProduct")
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
+  @@unique([storeId, handle])
   @@index([storeId])
   @@index([billboardId])
 }
 
 model Product {
-  id         String      @id @default(uuid())
-  storeId    String // Foreign Key to Store
-  store      Store       @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
-  categoryId String // Foreign Key to Category
-  category   Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
-  name       String
-  price      Decimal
-  isFeatured Boolean     @default(false)
-  isArchived Boolean     @default(false)
-  options    Option[] // Relation to Option model
-  variants   Variant[] // Relation to Variant model
-  images     Image[] // Relation to Image model
-  orderItems OrderItem[] // Relation to Order model
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id          String      @id @default(uuid())
+  storeId     String // Foreign Key to Store
+  store       Store       @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId  String // Foreign Key to Category
+  category    Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
+  name        String
+  handle      String
+  price       Decimal
+  description String      @db.Text
+  isFeatured  Boolean     @default(false)
+  isArchived  Boolean     @default(false)
+  options     Option[] // Relation to Option model
+  variants    Variant[] // Relation to Variant model
+  images      Image[] // Relation to Image model
+  orderItems  OrderItem[] // Relation to Order model
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
+  @@unique([storeId, handle])
   @@index([storeId])
   @@index([categoryId])
 }
