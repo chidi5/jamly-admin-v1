@@ -1,12 +1,15 @@
 import prismadb from "@/lib/prismadb";
-import { getUser, initUser } from "@/lib/queries";
-import { auth, currentUser } from "@clerk/nextjs";
+import { generateUniqueID, getUser, initUser } from "@/lib/queries";
+import { currentUser } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await currentUser();
     const body = await request.json();
+
+    const id = await generateUniqueID();
+    console.log(id);
 
     const { name, customerId } = body;
 
@@ -29,6 +32,7 @@ export async function POST(request: NextRequest) {
 
     const store = await prismadb.store.create({
       data: {
+        id: id,
         name,
         customerId,
         users: { connect: { id: userData?.id } },

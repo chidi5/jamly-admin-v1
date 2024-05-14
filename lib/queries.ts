@@ -5,6 +5,19 @@ import prismadb from "./prismadb";
 import { redirect } from "next/navigation";
 import { Store, Role, User, Invitation } from "@prisma/client";
 
+function generateRandomString(length: any) {
+  return crypto.randomUUID().toString().slice(0, length);
+}
+
+export async function generateUniqueID() {
+  let uniqueID;
+  do {
+    uniqueID = generateRandomString(6) + "-" + generateRandomString(2);
+  } while (await prismadb.store.findFirst({ where: { id: uniqueID } }));
+  //await prismadb.store('unique_ids').insertOne({ id: uniqueID });
+  return uniqueID;
+}
+
 export const getAuthUserDetails = async () => {
   const user = await currentUser();
   if (!user) {

@@ -1,11 +1,11 @@
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import { pricingCards } from "@/lib/constant";
 import { getPlans } from "@/lib/paystack/action";
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
 const HomePage = async () => {
   const { data } = await getPlans();
