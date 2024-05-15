@@ -6,7 +6,7 @@ export const pricingCards = [
     price: "Free",
     duration: "",
     highlight: "Key features",
-    features: ["2 Team members", "10 product list"],
+    features: ["10 product list", "2 Team members", "Basic Analytics"],
     priceId: "",
   },
   {
@@ -16,7 +16,12 @@ export const pricingCards = [
     price: "NGN 20,000",
     duration: "month",
     highlight: "Key features",
-    features: ["Rebilling", "24/7 Support team"],
+    features: [
+      "Unlimited Product list",
+      "24/7 Support team",
+      "10 team members",
+      "Advanced Analytics",
+    ],
     priceId: "PLN_n9u9ypf43pk6vti",
   },
   {
@@ -26,7 +31,7 @@ export const pricingCards = [
     price: "NGN 7000",
     duration: "month",
     highlight: "Everything in Starter, plus",
-    features: ["Unlimited Product list", "Unlimited Team members"],
+    features: ["Unlimited Product list", "5 Team members", "Basic Analytics"],
     priceId: "PLN_4elei0drizjfiie",
   },
 ];
