@@ -163,8 +163,8 @@ const HomePage = async () => {
               </p>
             </div>
             <div className="mt-14 w-full flex items-center justify-center mx-auto relative">
-              <div className="shrink-0 h-[522px] w-[1420px] relative overflow-hidden">
-                <div className="columns-4 gap-4 w-full">
+              <div className="shrink-0 h-[522px] w-full lg:w-[1420px] relative overflow-hidden">
+                <div className="columns-1 md:columns-2 lg:columns-4 gap-4 w-full">
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4">
                     <h3 className="font-medium tracking-tight text-lg">
                       - Ola
@@ -262,7 +262,7 @@ const HomePage = async () => {
       </section>
       <section className="bg-[#f3f4f6] py-24 md:py-40">
         <MaxWidthWrapper>
-          <div className="h-full flex flex-col gap-40 justify-center items-center">
+          <div className="h-full flex flex-col gap-20 md:gap-40 justify-center items-center">
             <div className="items-center text-center">
               <h3 className="font-semibold text-3xl">Get Started with Jamly</h3>
               <p className="text-muted-foreground text-xl">
