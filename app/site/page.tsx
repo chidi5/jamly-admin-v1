@@ -1,5 +1,5 @@
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getPlans } from "@/lib/paystack/action";
 import { cn } from "@/lib/utils";
 import { Award } from "lucide-react";
 import Image from "next/image";
@@ -88,7 +87,7 @@ const HomePage = async () => {
                     </CardTitle>
                     <CardDescription className="text-base md:text-lg">
                       Choose from a variety of stunning templates that reflect
-                      your brand's style
+                      your brand&apos;s style
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-1">
@@ -171,9 +170,10 @@ const HomePage = async () => {
                       - Ola
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "Thanks to Jamly's architecture we've created tailored
-                      commerce solutions for our clients in record time. Jamly's
-                      flexibility makes adapting to new requirements painless."
+                      &quot;Thanks to Jamly&apos;s architecture we&apos;ve
+                      created tailored commerce solutions for our clients in
+                      record time. Jamly&apos;s flexibility makes adapting to
+                      new requirements painless.&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4">
@@ -181,11 +181,11 @@ const HomePage = async () => {
                       - Sarah (Fashion Boutique Owner)
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "Jamly transformed my boutique business! Setting up my
-                      online store was a breeze, and the customizable designs
+                      &quot;Jamly transformed my boutique business! Setting up
+                      my online store was a breeze, and the customizable designs
                       allowed me to showcase my unique brand. Plus, the seamless
                       integrations with payment gateways made transactions
-                      smooth. Highly recommended!"
+                      smooth. Highly recommended!&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4 translate-y-8">
@@ -193,10 +193,10 @@ const HomePage = async () => {
                       - Mark (Tech Gadgets Retailer)
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "As a tech retailer, I needed an e-commerce platform that
-                      could handle inventory management and real-time analytics.
-                      Jamly delivered! The case studies convinced me, and now my
-                      business is thriving."
+                      &quot;As a tech retailer, I needed an e-commerce platform
+                      that could handle inventory management and real-time
+                      analytics. Jamly delivered! The case studies convinced me,
+                      and now my business is thriving.&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4 translate-y-8">
@@ -204,9 +204,10 @@ const HomePage = async () => {
                       - Emily (Handmade Crafts Seller)
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "Jamly’s powerful tools helped me scale my handmade crafts
-                      business. From order tracking to secure storage, it’s all
-                      there. My sales have skyrocketed since joining!"
+                      &quot;Jamly&apos;s powerful tools helped me scale my
+                      handmade crafts business. From order tracking to secure
+                      storage, it&apos;s all there. My sales have skyrocketed
+                      since joining!&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4 translate-y-16">
@@ -214,9 +215,9 @@ const HomePage = async () => {
                       - Alex (Fitness Apparel Brand)
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "Just launched my fitness apparel store using Jamly! The
-                      easy setup and responsive support team made the process
-                      stress-free. #JamlySuccess"
+                      &quot;Just launched my fitness apparel store using Jamly!
+                      The easy setup and responsive support team made the
+                      process stress-free. #JamlySuccess&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4 translate-y-16">
@@ -224,10 +225,10 @@ const HomePage = async () => {
                       - Anita
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "Choosing Jamly for my online art gallery was the best
-                      decision I've made. The seamless integration with other
-                      tools and the user-friendly interface have made managing
-                      my gallery a breeze."
+                      &quot;Choosing Jamly for my online art gallery was the
+                      best decision I&apos;ve made. The seamless integration
+                      with other tools and the user-friendly interface have made
+                      managing my gallery a breeze.&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4">
@@ -235,10 +236,10 @@ const HomePage = async () => {
                       - Lucas (Home Decor Store Owner)
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "Jamly has been a game-changer for my home decor business.
-                      The platform's ease of use and powerful features have
-                      allowed me to expand my customer base and increase sales
-                      significantly"
+                      &quot;Jamly has been a game-changer for my home decor
+                      business. The platform&apos;s ease of use and powerful
+                      features have allowed me to expand my customer base and
+                      increase sales significantly&quot;
                     </p>
                   </div>
                   <div className="flex flex-col-reverse h-full space-y-1.5 p-6 break-inside-avoid bg-white border rounded-2xl mb-4 gap-4">
@@ -246,10 +247,11 @@ const HomePage = async () => {
                       - Chidi (Entrepreneur and Startup Advisor)
                     </h3>
                     <p className="text-slate-600 text-base md:text-xl flex-grow">
-                      "I've advised many startups to use Jamly for their
-                      e-commerce needs, and the results have been outstanding.
-                      The platform's scalability and robust infrastructure make
-                      it an excellent choice for businesses of all sizes."
+                      &quot;I&apos;ve advised many startups to use Jamly for
+                      their e-commerce needs, and the results have been
+                      outstanding. The platform&apos;s scalability and robust
+                      infrastructure make it an excellent choice for businesses
+                      of all sizes.&quot;
                     </p>
                   </div>
                 </div>
