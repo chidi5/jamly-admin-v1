@@ -93,6 +93,15 @@ const Navigation = ({ user }: Props) => {
               </ul>
             </nav>
             <div className="ml-auto flex items-center space-x-4">
+              <Link
+                href="/sign-in"
+                className={cn(
+                  buttonVariants({ variant: "ghost" }),
+                  user ? "hidden" : ""
+                )}
+              >
+                Login
+              </Link>
               <Link href="/store" className={buttonVariants()}>
                 {user ? "Dashboard" : "Get Started"}
               </Link>
