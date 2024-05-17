@@ -56,13 +56,13 @@ const Navigation = ({ user }: Props) => {
   return (
     <div
       className={cn(
-        "fixed z-50 top-0 inset-x-0 h-[4.5rem]",
+        "fixed z-50 top-0 inset-x-0 h-14",
         scrolled ? "bg-white border-b" : "bg-[#f9fafb]"
       )}
     >
       <header className="relative">
         <MaxWidthWrapper>
-          <div className="flex h-[4.5rem] items-center">
+          <div className="flex h-14 items-center">
             <aside className="flex">
               <Link href={"/"} className="flex items-center gap-2">
                 <Image
@@ -81,7 +81,7 @@ const Navigation = ({ user }: Props) => {
                     key={route.href}
                     href={route.href}
                     className={cn(
-                      "transition-colors hover:text-primary",
+                      "text-xs font-medium transition-colors hover:text-primary",
                       route.active
                         ? "text-black dark:text-white"
                         : "text-slate-500"
@@ -102,7 +102,10 @@ const Navigation = ({ user }: Props) => {
               >
                 Login
               </Link>
-              <Link href="/store" className={buttonVariants()}>
+              <Link
+                href="/store"
+                className={cn("!text-xs !h-9", buttonVariants())}
+              >
                 {user ? "Dashboard" : "Get Started"}
               </Link>
             </div>
