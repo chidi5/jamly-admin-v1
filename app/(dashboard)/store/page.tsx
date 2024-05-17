@@ -11,14 +11,6 @@ const LandingPage = async ({
 
   const storeId = await verifyAndAcceptInvitation();
 
-  if (!user) {
-    if (searchParams.plan) {
-      redirect(`/sig-in?plan=${searchParams.plan}`);
-    } else {
-      redirect("/sign-in");
-    }
-  }
-
   if (storeId) {
     if (user?.role === "STORE_OWNER") {
       if (searchParams.plan) {
