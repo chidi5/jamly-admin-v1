@@ -16,7 +16,7 @@ import Link from "next/link";
 const HomePage = async () => {
   return (
     <>
-      <section className="py-32 relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
+      <section className="py-40 relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
         <div className="flex flex-col text-center items-center w-full gap-2 lg:pt-28 max-w-screen-lg px-2.5 sm:px-0">
           <h1 className="text-3xl md:text-6xl font-medium">
             <span className="block text-base sm:text-2xl">
