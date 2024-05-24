@@ -24,7 +24,7 @@ export const subscriptionCreated = async (
       price: `${subscription.amount / 100}`,
       currentPeriodEndDate: new Date(subscription.next_payment_date),
       priceId: subscription.plan.plan_code,
-      subscritiptionId: subscription.subscription_code,
+      subscriptionId: subscription.subscription_code,
       plan: subscription.plan.plan_code,
     };
 
