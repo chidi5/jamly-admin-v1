@@ -16,15 +16,15 @@ import Link from "next/link";
 const HomePage = async () => {
   return (
     <>
-      <section className="py-40 relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
-        <div className="flex flex-col text-center items-center w-full gap-2 lg:pt-28 max-w-screen-lg px-2.5 sm:px-0">
+      <section className="py-48 relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
+        <div className="flex flex-col text-center items-center w-full gap-2 lg:pt-32 max-w-screen-lg px-2.5 sm:px-0">
           <h1 className="text-3xl md:text-6xl font-medium">
             <span className="block text-base sm:text-2xl">
               From Click to Cart —
             </span>
             <span>Accelerate Your E-Commerce Journey Effortlessly.</span>
           </h1>
-          <p className="text-muted-foreground my-3 text-sm sm:mt-5 lg:mb-0 sm:text-base lg:text-lg">
+          <p className="text-muted-foreground my-3 text-lg sm:mt-5 lg:mb-0 lg:text-xl">
             Jamly is your express lane to online success.
             <br className="hidden md:block" />
             Set up your store swiftly, manage products effortlessly, and scale

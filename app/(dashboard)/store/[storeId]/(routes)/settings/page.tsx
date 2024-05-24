@@ -1,37 +1,17 @@
-import prismadb from "@/lib/prismadb";
-import { getUser } from "@/lib/queries";
-import { auth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
-import SettingsForm from "./components/settings-form";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import ProfileForm from "./components/profile-form";
 
-type SettingsProps = {
-  params: { storeId: string };
-};
-
-const SettingsPage = async ({ params }: SettingsProps) => {
-  const { userId } = auth();
-
-  if (!userId) redirect("/sign-in");
-
-  const user = await getUser(userId);
-
-  if (!user) redirect("/sign-in");
-
-  const store = await prismadb.store.findFirst({
-    where: {
-      AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
-    },
-  });
-
-  if (!store) redirect("/store");
-
+export default function SettingsProfilePage() {
   return (
-    <div className="flex-col">
-      <div className="flex-1 space-y-4">
-        <SettingsForm initialData={store} user={user} />
-      </div>
+    <div className="space-y-6">
+      <Heading
+        title="Profile"
+        description="Update your profile settings."
+        className="!text-lg font-medium"
+      />
+      <Separator />
+      <ProfileForm />
     </div>
   );
-};
-
-export default SettingsPage;
+}

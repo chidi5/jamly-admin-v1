@@ -132,6 +132,7 @@ model OrderItem {
   id        String  @id @default(uuid())
   orderId   String // Foreign Key to Order
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  price     Decimal // Store the price of the product variant here
   productId String // Foreign Key to Product
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -225,7 +226,7 @@ model Subscription {
   priceId              String
   customerId           String
   currentPeriodEndDate DateTime
-  subscritiptionId     String   @unique
+  subscriptionId       String   @unique
 
   storeId String? @unique
   Store   Store?  @relation(fields: [storeId], references: [id], onDelete: Cascade)

@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Heading } from "@/components/ui/heading";
 import ImageUpload from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -21,7 +21,6 @@ import { useOrigin } from "@/hooks/use-origin";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Store, User } from "@prisma/client";
 import axios from "axios";
-import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -33,15 +32,47 @@ type SettingsFormProps = {
 };
 
 const formSchema = z.object({
-  name: z.string().min(2),
-  storeLogo: z.string().min(1),
-  companyEmail: z.string().email("Invalid email format"),
-  companyPhone: z.string().min(1),
-  address: z.string().min(1),
-  city: z.string().min(1),
-  zipCode: z.string().min(1),
-  state: z.string().min(1),
-  country: z.string().min(1),
+  name: z.string().min(2, { message: "Name must be atleast 2 characters." }),
+  storeLogo: z
+    .string({
+      required_error: "Please enter a valid Image.",
+    })
+    .min(1),
+  companyEmail: z
+    .string({
+      required_error: "Please enter a valid email.",
+    })
+    .email(),
+  companyPhone: z
+    .string({
+      required_error: "Please enter a valid number.",
+    })
+    .min(1, { message: "Please enter a valid number." }),
+  address: z
+    .string({
+      required_error: "Address is required.",
+    })
+    .min(1),
+  city: z
+    .string({
+      required_error: "City is required.",
+    })
+    .min(1),
+  zipCode: z
+    .string({
+      required_error: "Zip code is required.",
+    })
+    .min(1),
+  state: z
+    .string({
+      required_error: "State is required.",
+    })
+    .min(1),
+  country: z
+    .string({
+      required_error: "Country is required.",
+    })
+    .min(1),
 });
 
 type SettingsFormValues = z.infer<typeof formSchema>;
@@ -99,51 +130,8 @@ const SettingsForm = ({ initialData, user }: SettingsFormProps) => {
     }
   };
 
-  const onDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`/api/stores/${params.storeId}`);
-      router.push("/");
-      router.refresh();
-      toast({ description: "Store deleted." });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description: "Make sure you removed all products and categories first.",
-      });
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
-  };
-
   return (
     <>
-      <AlertModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onConfirm={onDelete}
-        loading={loading}
-      />
-      <div className="flex items-center justify-between">
-        <Heading
-          title="Store settings"
-          description="Manage store preferences"
-        />
-        {user.role !== "STAFF_USER" && (
-          <Button
-            disabled={loading}
-            variant="destructive"
-            size="sm"
-            onClick={() => setOpen(true)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      <Separator />
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -167,24 +155,27 @@ const SettingsForm = ({ initialData, user }: SettingsFormProps) => {
               </FormItem>
             )}
           />
-          <div className="grid grid-cols-3 gap-8">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Store name"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={loading}
+                        placeholder="Store name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>This is your store name.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="companyEmail"
@@ -199,6 +190,9 @@ const SettingsForm = ({ initialData, user }: SettingsFormProps) => {
                       {...field}
                     />
                   </FormControl>
+                  <FormDescription>
+                    This is your company email address.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

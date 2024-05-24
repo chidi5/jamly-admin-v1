@@ -57,3 +57,18 @@ export type Subscription = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type ProductData = {
+  productId?: string;
+  name: string;
+  price: number;
+  handle: string;
+  description: string;
+  categoryId: string;
+  isFeatured: boolean;
+  isArchived: boolean;
+  storeId: string;
+  images: { url: string }[];
+  variants: { title: string; price: number; inventory: number }[];
+  options: { optionName: string; optionValues: { name: string }[] }[];
+};

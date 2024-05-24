@@ -56,20 +56,20 @@ const Navigation = ({ user }: Props) => {
   return (
     <div
       className={cn(
-        "fixed z-50 top-0 inset-x-0 h-14",
+        "fixed z-50 top-0 inset-x-0 h-16",
         scrolled ? "bg-white border-b" : "bg-[#f9fafb]"
       )}
     >
       <header className="relative">
         <MaxWidthWrapper>
-          <div className="flex h-14 items-center">
+          <div className="flex h-16 items-center">
             <aside className="flex">
               <Link href={"/"} className="flex items-center gap-2">
                 <Image
                   src={"/assets/plura-logo.svg"}
-                  width={40}
-                  height={40}
-                  alt="plur logo"
+                  width={35}
+                  height={35}
+                  alt="jamly logo"
                 />
                 <span className="text-xl font-bold"> Jamly.</span>
               </Link>
@@ -81,7 +81,7 @@ const Navigation = ({ user }: Props) => {
                     key={route.href}
                     href={route.href}
                     className={cn(
-                      "text-xs font-medium transition-colors hover:text-primary",
+                      "text-base font-medium transition-colors hover:text-primary",
                       route.active
                         ? "text-black dark:text-white"
                         : "text-slate-500"
@@ -97,6 +97,7 @@ const Navigation = ({ user }: Props) => {
                 href="/sign-in"
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
+                  "text-base",
                   user ? "hidden" : ""
                 )}
               >
@@ -104,7 +105,7 @@ const Navigation = ({ user }: Props) => {
               </Link>
               <Link
                 href="/store"
-                className={cn("!text-xs !h-9", buttonVariants())}
+                className={cn("!text-base !h-9", buttonVariants())}
               >
                 {user ? "Dashboard" : "Get Started"}
               </Link>

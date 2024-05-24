@@ -101,6 +101,7 @@ CREATE TABLE "Order" (
 CREATE TABLE "OrderItem" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
+    "price" DECIMAL(65,30) NOT NULL,
     "productId" TEXT NOT NULL,
 
     CONSTRAINT "OrderItem_pkey" PRIMARY KEY ("id")
@@ -179,7 +180,7 @@ CREATE TABLE "Subscription" (
     "priceId" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "currentPeriodEndDate" TIMESTAMP(3) NOT NULL,
-    "subscritiptionId" TEXT NOT NULL,
+    "subscriptionId" TEXT NOT NULL,
     "storeId" TEXT,
 
     CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
@@ -246,7 +247,7 @@ CREATE INDEX "Invitation_storeId_idx" ON "Invitation"("storeId");
 CREATE INDEX "Notification_storeId_idx" ON "Notification"("storeId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Subscription_subscritiptionId_key" ON "Subscription"("subscritiptionId");
+CREATE UNIQUE INDEX "Subscription_subscriptionId_key" ON "Subscription"("subscriptionId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Subscription_storeId_key" ON "Subscription"("storeId");

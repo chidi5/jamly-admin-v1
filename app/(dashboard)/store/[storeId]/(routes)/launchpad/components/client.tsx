@@ -117,7 +117,7 @@ const LaunchPadClient = ({ data }: LaunchPadClientProps) => {
                 ) : (
                   <Link
                     className="bg-primary py-2 px-4 rounded-md text-white"
-                    href={`/store/${data.id}/settings`}
+                    href={`/store/${data.id}/settings/account`}
                   >
                     Start
                   </Link>

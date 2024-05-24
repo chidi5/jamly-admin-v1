@@ -90,7 +90,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isHiddden, setIshidden] = useState(initialData ? false : true);
+  const [isHidden, setIsHidden] = useState(initialData ? false : true);
 
   const title = initialData ? "Edit product" : "Create product";
   const description = initialData ? "Edit a product." : "Add a new product";
@@ -183,8 +183,6 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       );
 
       appendOption(formattedOptions);
-
-      console.log(formattedOptions);
     }
   }, [initialData, appendOption]);
 
@@ -207,10 +205,16 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     return titles;
   }
 
+  const removeOptionValue = (optionIndex: number, valueIndex: number) => {
+    const currentValues = form.getValues(`options.${optionIndex}.optionValues`);
+    currentValues.splice(valueIndex, 1);
+    form.setValue(`options.${optionIndex}.optionValues`, currentValues);
+  };
+
   const handleVariant = () => {
     const options = getValues("options"); // Get form values
     const newVariantTitles = generateVariantTitles(options);
-    setIshidden(false);
+    setIsHidden(false);
 
     if (variantFields.length > 0) {
       for (let i = variantFields.length - 1; i >= 0; i--) {
@@ -301,7 +305,6 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
           </Button>
         )}
       </div>
-
       <Separator />
       <Form {...form}>
         <form
@@ -359,16 +362,13 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Product Handle"
+                      placeholder="Product handle"
                       {...field}
-                      onChange={(e) => {
-                        const inputValue = e.target.value;
-                        const lowerCaseValue = inputValue.toLowerCase();
-                        const noSpaceValue = lowerCaseValue.replace(/\s/g, "");
-                        field.onChange(noSpaceValue);
-                      }}
                     />
                   </FormControl>
+                  <FormDescription>
+                    This is the URL slug for your product. It must be unique.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -465,37 +465,32 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                 </FormItem>
               )}
             />
+            <div className="col-span-2">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <SimpleMDE
+                        {...field}
+                        options={{ hideIcons: ["image", "link"] }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
-          <FormField
-            name="description"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <SimpleMDE placeholder="Description" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="flex items-center justify-between">
-            <Heading
-              title="Variant"
-              description="Product options and  variant"
-            />
-            <div className="space-x-3">
-              <Button
-                type="button"
-                disabled={loading || optionFields.length === 0}
-                variant="outline"
-                size="sm"
-                onClick={handleVariant}
-              >
-                <Plus className="h-4 w-4" /> Generate variant
-              </Button>
+          <>
+            <div className="flex items-center justify-between">
+              <Heading
+                title="Options"
+                description="Add options for your product (e.g., Size, Color, Weight)"
+              />
               <Button
                 type="button"
                 disabled={loading}
@@ -507,112 +502,36 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                   })
                 }
               >
-                <Plus className="h-4 w-4" /> Add Option
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-
-          <Separator className=" !mt-4" />
-
-          <div className="grid grid-cols-3 gap-8">
-            {optionFields.map((option, index) => (
-              <div key={option.id}>
-                <FormField
-                  control={form.control}
-                  name={`options.${index}.optionName`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <div className="flex items-center justify-between">
-                          <div>Option Name</div>
-                          <Button
-                            type="button"
-                            disabled={loading}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeOption(index)}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={loading}
-                          placeholder="Option Name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <OptionValuesFieldArray
-                  form={form}
-                  loading={loading}
-                  nestIndex={index}
-                  {...{ control }}
-                />
-              </div>
-            ))}
-          </div>
-
-          <>
-            <div
-              className={cn("grid grid-cols-3 gap-4", {
-                hidden: isHiddden,
-              })}
-            >
-              <FormLabel>Name</FormLabel>
-              <FormLabel>Price</FormLabel>
-              <FormLabel>Inventory</FormLabel>
-            </div>
-            {variantFields.map((variant, variantIndex) => (
-              <div key={variant.id} className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name={`variants.${variantIndex}.title`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          disabled
-                          placeholder="Variant title"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`variants.${variantIndex}.price`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          disabled={loading}
-                          placeholder="9.99"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex items-center gap-3">
+            <Separator className="!mt-4" />
+            <div className="grid grid-cols-3 gap-4">
+              {optionFields.map((field, index) => (
+                <div key={field.id}>
                   <FormField
                     control={form.control}
-                    name={`variants.${variantIndex}.inventory`}
+                    name={`options.${index}.optionName`}
                     render={({ field }) => (
-                      <FormItem className="w-full">
+                      <FormItem>
+                        <FormLabel>
+                          <div className="flex items-center justify-between">
+                            <div>Option Name</div>
+                            <Button
+                              type="button"
+                              disabled={loading}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeOption(index)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
                             disabled={loading}
-                            placeholder="20"
+                            placeholder="Option Name"
                             {...field}
                           />
                         </FormControl>
@@ -620,92 +539,163 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                       </FormItem>
                     )}
                   />
-                  <Button
-                    type="button"
-                    disabled={loading}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeVariant(variantIndex)}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
+                  <div className="mt-6">
+                    {form
+                      .watch(`options.${index}.optionValues`)
+                      .map((value, valueIndex) => (
+                        <div
+                          key={valueIndex}
+                          className="flex space-x-2 items-center"
+                        >
+                          <FormField
+                            control={form.control}
+                            name={`options.${index}.optionValues.${valueIndex}.name`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl className="mt-2">
+                                  <Input
+                                    disabled={loading}
+                                    placeholder="Value"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            disabled={valueIndex == 0 ? true : loading}
+                            variant="ghost"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => removeOptionValue(index, valueIndex)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    <Button
+                      type="button"
+                      disabled={loading}
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() =>
+                        form.setValue(`options.${index}.optionValues`, [
+                          ...form.getValues(`options.${index}.optionValues`),
+                          { name: "" },
+                        ])
+                      }
+                    >
+                      <Plus className="h-4 w-4" />
+                      &nbsp; Add option value
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <Button
+              type="button"
+              onClick={handleVariant}
+              disabled={loading || optionFields.length === 0}
+              className={cn(
+                optionFields.length === 0 || !isHidden ? "hidden" : "block"
+              )}
+            >
+              Generate Variants
+            </Button>
           </>
+
+          {!isHidden && (
+            <>
+              <div className="flex items-center justify-between">
+                <Heading
+                  title="Variants"
+                  description="Manage product variants"
+                />
+                <Button
+                  type="button"
+                  onClick={handleVariant}
+                  disabled={loading || optionFields.length === 0}
+                >
+                  Generate Variants
+                </Button>
+              </div>
+              <Separator className="!mt-4" />
+              {variantFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`variants.${index}.title`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            disabled
+                            placeholder="Variant title"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`variants.${index}.price`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            disabled={loading}
+                            placeholder="9.99"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex items-center gap-3">
+                    <FormField
+                      control={form.control}
+                      name={`variants.${index}.inventory`}
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormControl>
+                            <Input
+                              type="number"
+                              disabled={loading}
+                              placeholder="20"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="button"
+                      disabled={loading}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeVariant(index)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}&nbsp; {loading && <Spinner />}
           </Button>
         </form>
       </Form>
     </>
-  );
-};
-
-const OptionValuesFieldArray = ({
-  form,
-  loading,
-  nestIndex,
-  control,
-}: {
-  form: any;
-  loading: boolean;
-  nestIndex: any;
-  control: any;
-}) => {
-  const {
-    fields: optionValueFields,
-    append: appendOptionValue,
-    remove: removeOptionValue,
-  } = useFieldArray({
-    control,
-    name: `options.${nestIndex}.optionValues`,
-  });
-
-  return (
-    <div className="mt-6">
-      {optionValueFields.map((item, k) => (
-        <div key={item.id} className="flex space-x-2 items-center">
-          <FormField
-            control={form.control}
-            name={`options.${nestIndex}.optionValues.${k}.name`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl className="mt-2">
-                  <Input
-                    disabled={loading}
-                    placeholder="Option Value"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="button"
-            disabled={k == 0 ? true : loading}
-            variant="ghost"
-            size="sm"
-            className="mt-2"
-            onClick={() => removeOptionValue(k)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
-      <Button
-        type="button"
-        disabled={loading}
-        variant="ghost"
-        size="sm"
-        className="mt-2"
-        onClick={() => appendOptionValue({ value: "" })}
-      >
-        <Plus className="h-4 w-4" />
-        &nbsp; Add option value
-      </Button>
-    </div>
   );
 };
 

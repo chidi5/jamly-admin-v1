@@ -12,6 +12,8 @@ export function NavItem({
   const pathname = usePathname();
   const params = useParams();
 
+  const settingsPath = `/store/${params.storeId}/settings`;
+
   const routes = [
     {
       href: `/store/${params.storeId}`,
@@ -54,9 +56,9 @@ export function NavItem({
       active: pathname === `/store/${params.storeId}/billing`,
     },
     {
-      href: `/store/${params.storeId}/settings`,
+      href: settingsPath,
       label: "Settings",
-      active: pathname === `/store/${params.storeId}/settings`,
+      active: pathname.startsWith(settingsPath),
     },
   ];
 
