@@ -13,7 +13,7 @@ export async function POST(
 
     const body = await request.json();
 
-    const { name, imageUrl, products } = body;
+    const { name, imageUrl, products, isFeatured } = body;
     const handle = await generateUniqueCategoryHandle(name);
 
     if (!userId) {
@@ -42,6 +42,7 @@ export async function POST(
       data: {
         name,
         handle,
+        isFeatured: isFeatured || false,
         imageUrl: imageUrl || null,
         products:
           products && products.length > 0

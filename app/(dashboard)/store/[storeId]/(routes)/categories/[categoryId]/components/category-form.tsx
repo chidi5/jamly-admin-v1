@@ -41,6 +41,7 @@ type CategoryFormProps = {
       })
     | null;
   products: Product[];
+  storeId: string;
 };
 
 const formSchema = z.object({
@@ -52,7 +53,11 @@ const formSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof formSchema>;
 
-const CategoryForm = ({ initialData, products }: CategoryFormProps) => {
+const CategoryForm = ({
+  initialData,
+  products,
+  storeId,
+}: CategoryFormProps) => {
   const params = useParams();
   const router = useRouter();
   const origin = useOrigin();
@@ -86,7 +91,7 @@ const CategoryForm = ({ initialData, products }: CategoryFormProps) => {
     setModalOpen(
       <CustomModal title="Add products to category" subheading="">
         <Form {...form}>
-          <ProductSelectForm products={products} />
+          <ProductSelectForm products={products} storeId={storeId} />
         </Form>
       </CustomModal>
     );
@@ -176,7 +181,7 @@ const CategoryForm = ({ initialData, products }: CategoryFormProps) => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Products in category</CardTitle>
-                    {initialData?.products && (
+                    {form.getValues("products")!.length > 0 && (
                       <Button
                         variant="secondary"
                         type="button"

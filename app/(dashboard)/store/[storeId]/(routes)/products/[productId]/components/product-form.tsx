@@ -297,7 +297,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     }
   }, [optionFields, form]);
 
-  function generateVariantTitles(options: any[]) {
+  const generateVariantTitles = useCallback((options: any[]) => {
     let titles: string[] = [];
 
     function buildTitles(index: number, prefix: string) {
@@ -314,20 +314,17 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
 
     buildTitles(0, "");
     return titles;
-  }
+  }, []);
 
   const handleVariant = useCallback(() => {
     const options = form.getValues("options");
-    if (!options) return null;
+    if (!options) return;
     const newVariantTitles = generateVariantTitles(options);
-    setIsHidden(false);
 
-    if (variantFields.length > 0) {
-      for (let i = variantFields.length - 1; i >= 0; i--) {
-        removeVariant(i);
-      }
-    }
+    // Clear existing variants
+    variantFields.forEach((_, index) => removeVariant(index));
 
+    // Append new variants
     newVariantTitles.forEach((title) => {
       const matchingVariant = initialData?.variants?.find(
         (variant) => variant.title === title
@@ -354,14 +351,20 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
         status: inventoryStatus,
       });
     });
-  }, [initialData, variantFields, appendVariant, form, setIsHidden]);
+  }, [
+    form,
+    initialData?.variants,
+    variantFields,
+    removeVariant,
+    appendVariant,
+    generateVariantTitles,
+  ]);
 
   const clearVariants = useCallback(() => {
     form.setValue("variants", []);
   }, [form]);
 
   const clearStockShip = useCallback(() => {
-    //form.setValue("weight", 0);
     form.setValue("stock", {
       trackInventory: false,
       quantity: undefined,
@@ -376,7 +379,8 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     } else {
       clearVariants();
     }
-  }, [isHidden, handleVariant, clearStockShip, clearVariants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHidden, clearStockShip, clearVariants]);
 
   const handleAddSection = (data: z.infer<typeof AdditionalInfoSchema>) => {
     if (currentSection) {
