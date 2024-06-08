@@ -56,7 +56,7 @@ const ProductSelectForm = ({ products, storeId }: ProductSelectProps) => {
               render={() => (
                 <FormItem
                   key={product.id}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between mb-4"
                 >
                   <FormLabel className="font-normal text-lg cursor-pointer">
                     <div className="flex items-center gap-4">
