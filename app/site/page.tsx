@@ -54,7 +54,7 @@ const HomePage = async () => {
                 </p>
               </div>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-3 my-5">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 my-5">
               <div>
                 <Card className="flex flex-col-reverse rounded-3xl border border-slate-200 shadow-none">
                   <CardHeader>
