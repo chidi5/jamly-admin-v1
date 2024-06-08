@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import WidthWrapper from "@/components/WidthWrapper";
 import prismadb from "@/lib/prismadb";
 import CustomModalProvider from "@/providers/cutom-modal-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
@@ -27,10 +28,17 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <Navbar />
-      <WidthWrapper className="lg:px-10 py-8">
-        <CustomModalProvider>{children}</CustomModalProvider>
-      </WidthWrapper>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <Navbar />
+        <WidthWrapper className="lg:px-10 py-8">
+          <CustomModalProvider>{children}</CustomModalProvider>
+        </WidthWrapper>
+      </ThemeProvider>
     </>
   );
 }

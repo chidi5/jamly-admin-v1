@@ -2,6 +2,15 @@
 CREATE TYPE "Role" AS ENUM ('STORE_OWNER', 'STAFF_USER');
 
 -- CreateEnum
+CREATE TYPE "ProductType" AS ENUM ('PHYSICAL', 'DIGITAL');
+
+-- CreateEnum
+CREATE TYPE "InventoryStatus" AS ENUM ('IN_STOCK', 'OUT_OF_STOCK', 'PARTIALLY_OUT_OF_STOCK');
+
+-- CreateEnum
+CREATE TYPE "DiscountType" AS ENUM ('AMOUNT', 'PERCENT');
+
+-- CreateEnum
 CREATE TYPE "InvitationStatus" AS ENUM ('ACCEPTED', 'REVOKED', 'PENDING');
 
 -- CreateEnum
@@ -35,6 +44,7 @@ CREATE TABLE "Store" (
     "zipCode" TEXT,
     "state" TEXT,
     "country" TEXT,
+    "defaultCurrency" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -58,11 +68,11 @@ CREATE TABLE "Billboard" (
 CREATE TABLE "Category" (
     "id" TEXT NOT NULL,
     "storeId" TEXT NOT NULL,
-    "billboardId" TEXT,
     "name" TEXT NOT NULL,
     "handle" TEXT NOT NULL,
+    "imageUrl" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
@@ -71,17 +81,28 @@ CREATE TABLE "Category" (
 CREATE TABLE "Product" (
     "id" TEXT NOT NULL,
     "storeId" TEXT NOT NULL,
-    "categoryId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "handle" TEXT NOT NULL,
-    "price" DECIMAL(65,30) NOT NULL,
+    "productType" "ProductType" NOT NULL DEFAULT 'PHYSICAL',
     "description" TEXT NOT NULL,
     "isFeatured" BOOLEAN NOT NULL DEFAULT false,
     "isArchived" BOOLEAN NOT NULL DEFAULT false,
+    "manageVariants" BOOLEAN NOT NULL DEFAULT false,
+    "weight" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AdditionalInfoSection" (
+    "id" TEXT NOT NULL,
+    "title" VARCHAR(50) NOT NULL,
+    "description" VARCHAR(16000) NOT NULL,
+    "productId" TEXT NOT NULL,
+
+    CONSTRAINT "AdditionalInfoSection_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -112,8 +133,6 @@ CREATE TABLE "Variant" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "price" DECIMAL(65,30) NOT NULL,
-    "inventory" INTEGER NOT NULL,
 
     CONSTRAINT "Variant_pkey" PRIMARY KEY ("id")
 );
@@ -145,6 +164,54 @@ CREATE TABLE "Image" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PriceData" (
+    "id" TEXT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "discountedPrice" DOUBLE PRECISION,
+    "productId" TEXT,
+    "variantId" TEXT,
+
+    CONSTRAINT "PriceData_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CostAndProfitData" (
+    "id" TEXT NOT NULL,
+    "itemCost" DOUBLE PRECISION NOT NULL,
+    "formattedItemCost" TEXT NOT NULL,
+    "profit" DOUBLE PRECISION,
+    "formattedProfit" TEXT NOT NULL,
+    "profitMargin" DOUBLE PRECISION,
+    "productId" TEXT,
+    "variantId" TEXT,
+
+    CONSTRAINT "CostAndProfitData_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Stock" (
+    "id" TEXT NOT NULL,
+    "trackInventory" BOOLEAN NOT NULL,
+    "quantity" INTEGER,
+    "inventoryStatus" "InventoryStatus" NOT NULL,
+    "productId" TEXT,
+    "variantId" TEXT,
+
+    CONSTRAINT "Stock_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Discount" (
+    "id" TEXT NOT NULL,
+    "type" "DiscountType" NOT NULL,
+    "value" DOUBLE PRECISION NOT NULL,
+    "productId" TEXT,
+
+    CONSTRAINT "Discount_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -187,6 +254,12 @@ CREATE TABLE "Subscription" (
 );
 
 -- CreateTable
+CREATE TABLE "_CategoriesOnProduct" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL
+);
+
+-- CreateTable
 CREATE TABLE "_VariantOptions" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL
@@ -205,16 +278,10 @@ CREATE INDEX "Billboard_storeId_idx" ON "Billboard"("storeId");
 CREATE INDEX "Category_storeId_idx" ON "Category"("storeId");
 
 -- CreateIndex
-CREATE INDEX "Category_billboardId_idx" ON "Category"("billboardId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Category_storeId_handle_key" ON "Category"("storeId", "handle");
 
 -- CreateIndex
 CREATE INDEX "Product_storeId_idx" ON "Product"("storeId");
-
--- CreateIndex
-CREATE INDEX "Product_categoryId_idx" ON "Product"("categoryId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Product_storeId_handle_key" ON "Product"("storeId", "handle");
@@ -238,6 +305,27 @@ CREATE INDEX "OptionValue_optionId_idx" ON "OptionValue"("optionId");
 CREATE INDEX "Image_productId_idx" ON "Image"("productId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "PriceData_productId_key" ON "PriceData"("productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PriceData_variantId_key" ON "PriceData"("variantId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CostAndProfitData_productId_key" ON "CostAndProfitData"("productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CostAndProfitData_variantId_key" ON "CostAndProfitData"("variantId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Stock_productId_key" ON "Stock"("productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Stock_variantId_key" ON "Stock"("variantId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Discount_productId_key" ON "Discount"("productId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Invitation_email_key" ON "Invitation"("email");
 
 -- CreateIndex
@@ -256,6 +344,12 @@ CREATE UNIQUE INDEX "Subscription_storeId_key" ON "Subscription"("storeId");
 CREATE INDEX "Subscription_customerId_idx" ON "Subscription"("customerId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "_CategoriesOnProduct_AB_unique" ON "_CategoriesOnProduct"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_CategoriesOnProduct_B_index" ON "_CategoriesOnProduct"("B");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "_VariantOptions_AB_unique" ON "_VariantOptions"("A", "B");
 
 -- CreateIndex
@@ -271,13 +365,10 @@ ALTER TABLE "Billboard" ADD CONSTRAINT "Billboard_storeId_fkey" FOREIGN KEY ("st
 ALTER TABLE "Category" ADD CONSTRAINT "Category_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_billboardId_fkey" FOREIGN KEY ("billboardId") REFERENCES "Billboard"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "AdditionalInfoSection" ADD CONSTRAINT "AdditionalInfoSection_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -301,6 +392,27 @@ ALTER TABLE "OptionValue" ADD CONSTRAINT "OptionValue_optionId_fkey" FOREIGN KEY
 ALTER TABLE "Image" ADD CONSTRAINT "Image_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "PriceData" ADD CONSTRAINT "PriceData_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PriceData" ADD CONSTRAINT "PriceData_variantId_fkey" FOREIGN KEY ("variantId") REFERENCES "Variant"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CostAndProfitData" ADD CONSTRAINT "CostAndProfitData_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CostAndProfitData" ADD CONSTRAINT "CostAndProfitData_variantId_fkey" FOREIGN KEY ("variantId") REFERENCES "Variant"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Stock" ADD CONSTRAINT "Stock_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Stock" ADD CONSTRAINT "Stock_variantId_fkey" FOREIGN KEY ("variantId") REFERENCES "Variant"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Discount" ADD CONSTRAINT "Discount_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -308,6 +420,12 @@ ALTER TABLE "Notification" ADD CONSTRAINT "Notification_storeId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_CategoriesOnProduct" ADD CONSTRAINT "_CategoriesOnProduct_A_fkey" FOREIGN KEY ("A") REFERENCES "Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_CategoriesOnProduct" ADD CONSTRAINT "_CategoriesOnProduct_B_fkey" FOREIGN KEY ("B") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_VariantOptions" ADD CONSTRAINT "_VariantOptions_A_fkey" FOREIGN KEY ("A") REFERENCES "OptionValue"("id") ON DELETE CASCADE ON UPDATE CASCADE;

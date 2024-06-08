@@ -21,7 +21,7 @@ const CategoryClient = ({ data }: CategoryClientProps) => {
       <div className="flex items-center justify-between">
         <Heading
           title={`Categories (${data.length})`}
-          description="Manage categories for your store"
+          description="Group related products into categories and add them to your site"
         />
         <Button
           onClick={() => router.push(`/store/${params.storeId}/categories/new`)}

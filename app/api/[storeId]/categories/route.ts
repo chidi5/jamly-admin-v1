@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 
 import prismadb from "@/lib/prismadb";
+import { generateUniqueCategoryHandle } from "@/lib/queries";
 
 export async function POST(
   request: NextRequest,
@@ -12,7 +13,8 @@ export async function POST(
 
     const body = await request.json();
 
-    const { name, billboardId, handle } = body;
+    const { name, imageUrl, products } = body;
+    const handle = await generateUniqueCategoryHandle(name);
 
     if (!userId) {
       return new NextResponse("Unauthenticated", { status: 403 });
@@ -39,8 +41,16 @@ export async function POST(
     const category = await prismadb.category.create({
       data: {
         name,
-        billboardId: billboardId || null,
         handle,
+        imageUrl: imageUrl || null,
+        products:
+          products && products.length > 0
+            ? {
+                connect: products.map((productId: string) => ({
+                  id: productId,
+                })),
+              }
+            : undefined,
         storeId: params.storeId,
       },
     });
@@ -66,7 +76,7 @@ export async function GET(
         storeId: params.storeId,
       },
       include: {
-        billboard: true,
+        products: true,
       },
     });
 

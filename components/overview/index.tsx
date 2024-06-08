@@ -1,14 +1,11 @@
-import React from "react";
+import { getSalesCount, getTotalRevenue, getTotalStock } from "@/lib/queries";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import OverviewTab from "./overview-tab";
 
-type OverviewProps = {
-  totalRevenue: number;
-  sales: number;
-  stock: number;
-};
-
-const Overview = ({ totalRevenue, sales, stock }: OverviewProps) => {
+const Overview = async ({ storeId }: { storeId: string }) => {
+  const totalRevenue = await getTotalRevenue(storeId);
+  const sales = await getSalesCount(storeId);
+  const stock = await getTotalStock(storeId);
   return (
     <Tabs defaultValue="overview" className="space-y-4">
       <TabsList>

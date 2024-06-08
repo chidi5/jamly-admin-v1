@@ -12,9 +12,6 @@ const CategoriesPage = async ({ params }: CategoryProps) => {
     where: {
       storeId: params.storeId,
     },
-    include: {
-      billboard: true,
-    },
     orderBy: {
       createdAt: "desc",
     },
@@ -24,7 +21,7 @@ const CategoriesPage = async ({ params }: CategoryProps) => {
     id: item.id,
     name: item.name,
     handle: item.handle,
-    billboardLabel: item.billboard ? item.billboard.label : "-",
+    isFeatured: item.isFeatured,
     createdAt: format(item.createdAt, "MMMM do, yyyy"),
   }));
 

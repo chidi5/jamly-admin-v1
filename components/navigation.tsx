@@ -7,14 +7,13 @@ import { useEffect, useState } from "react";
 import MaxWidthWrapper from "./MaxWidthWrapper";
 import { buttonVariants } from "./ui/button";
 import { usePathname } from "next/navigation";
+import { UserButton, useUser } from "@clerk/nextjs";
 
-type Props = {
-  user: any;
-};
-
-const Navigation = ({ user }: Props) => {
+const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -93,22 +92,29 @@ const Navigation = ({ user }: Props) => {
               </ul>
             </nav>
             <div className="ml-auto flex items-center space-x-4">
-              <Link
-                href="/sign-in"
-                className={cn(
-                  buttonVariants({ variant: "ghost" }),
-                  "text-base",
-                  user ? "hidden" : ""
-                )}
-              >
-                Login
-              </Link>
-              <Link
-                href="/store"
-                className={cn("!text-base !h-9", buttonVariants())}
-              >
-                {user ? "Dashboard" : "Get Started"}
-              </Link>
+              {isLoaded && (
+                <>
+                  <Link
+                    href="/sign-in"
+                    className={cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "text-base",
+                      user ? "hidden" : ""
+                    )}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/store"
+                    className={cn("!text-base !h-9", buttonVariants())}
+                  >
+                    {user ? "Dashboard" : "Get Started"}
+                  </Link>
+                  <div className={!user ? "hidden" : ""}>
+                    <UserButton />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </MaxWidthWrapper>

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
+import { NextRequest, NextResponse } from "next/server";
 
 import prismadb from "@/lib/prismadb";
-import { Prisma } from "@prisma/client";
 import {
-  createOrUpdateProduct,
+  createOptionsAndValues,
+  generateUniqueProductHandle,
   getStoreByUserId,
   validateProductData,
 } from "@/lib/queries";
@@ -27,7 +27,12 @@ export async function GET(
       },
       include: {
         images: true,
-        category: true,
+        priceData: true,
+        costAndProfitData: true,
+        discount: true,
+        stock: true,
+        categories: true,
+        additionalInfoSections: true,
         options: {
           include: {
             values: true,
@@ -35,11 +40,14 @@ export async function GET(
         },
         variants: {
           include: {
+            priceData: true,
+            costAndProfitData: true,
+            stock: true,
             selectedOptions: {
               include: {
                 option: true,
               },
-            }, // Include selectedOptions within variants
+            },
           },
         },
       },
@@ -92,7 +100,7 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { productId: string; storeId: string } }
+  { params }: { params: { storeId: string; productId: string } }
 ) {
   try {
     const { userId } = auth();
@@ -101,28 +109,237 @@ export async function PATCH(
     const body = await request.json();
     await validateProductData(body);
 
-    if (!params.productId) throw new Error("Product id is required");
     if (!params.storeId) throw new Error("Store id is required");
+    if (!params.productId) throw new Error("Product id is required");
+
+    // Fetch the store's default currency
+    const store = await prismadb.store.findUnique({
+      where: { id: params.storeId },
+      select: { defaultCurrency: true },
+    });
+
+    if (!store) {
+      return new NextResponse("Store not found", { status: 404 });
+    }
 
     await getStoreByUserId(params.storeId, userId);
 
-    const product = await prismadb.$transaction(
-      (prisma) =>
-        createOrUpdateProduct(
-          prisma,
-          { ...body, productId: params.productId, storeId: params.storeId },
-          false
-        ),
-      {
-        maxWait: 8000, // default: 2000
-        timeout: 10000, // default: 5000
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
-      }
-    );
+    const existingProduct = await prismadb.product.findUnique({
+      where: { id: params.productId },
+      include: {
+        images: true,
+        priceData: true,
+        costAndProfitData: true,
+        stock: true,
+        discount: true,
+        additionalInfoSections: true,
+        categories: true,
+        options: true,
+        variants: true,
+      },
+    });
 
-    return NextResponse.json(product);
+    if (!existingProduct) {
+      return new NextResponse("Product not found", { status: 404 });
+    }
+
+    const updatedProduct = await prismadb.product.update({
+      where: { id: params.productId },
+      data: {
+        name: body.name,
+        handle:
+          body.name !== existingProduct.name
+            ? await generateUniqueProductHandle(body.name)
+            : existingProduct.handle,
+        description: body.description,
+        isFeatured: body.isFeatured,
+        isArchived: body.isArchived,
+        manageVariants: body.manageVariants,
+        weight: body.weight,
+        priceData: {
+          update: {
+            price: body.price,
+            discountedPrice: body.discountedPrice ?? null,
+            currency: store.defaultCurrency,
+          },
+        },
+        costAndProfitData: body.costProfit
+          ? {
+              upsert: {
+                create: {
+                  itemCost: body.costProfit.itemCost ?? 0,
+                  profit: body.costProfit.profit,
+                  profitMargin: body.costProfit.profitMargin,
+                  formattedItemCost:
+                    store.defaultCurrency +
+                      body.costProfit.itemCost?.toFixed(2) ||
+                    store.defaultCurrency + "0.00",
+                  formattedProfit:
+                    store.defaultCurrency +
+                      body.costProfit.profit?.toFixed(2) ||
+                    store.defaultCurrency + "0.00",
+                },
+                update: {
+                  itemCost: body.costProfit.itemCost ?? 0,
+                  profit: body.costProfit.profit,
+                  profitMargin: body.costProfit.profitMargin,
+                  formattedItemCost:
+                    store.defaultCurrency +
+                      body.costProfit.itemCost?.toFixed(2) ||
+                    store.defaultCurrency + "0.00",
+                  formattedProfit:
+                    store.defaultCurrency +
+                      body.costProfit.profit?.toFixed(2) ||
+                    store.defaultCurrency + "0.00",
+                },
+              },
+            }
+          : undefined,
+        stock: body.manageVariants
+          ? {
+              delete: true,
+            }
+          : body.stock
+          ? {
+              upsert: {
+                create: {
+                  trackInventory: body.stock.trackInventory,
+                  quantity: body.stock.quantity ?? null,
+                  inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
+                },
+                update: {
+                  trackInventory: body.stock.trackInventory,
+                  quantity: body.stock.quantity ?? null,
+                  inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
+                },
+              },
+            }
+          : undefined,
+        discount:
+          body.discount.value !== undefined
+            ? {
+                upsert: {
+                  create: {
+                    value: body.discount.value,
+                    type: body.discount.type,
+                  },
+                  update: {
+                    value: body.discount.value,
+                    type: body.discount.type,
+                  },
+                },
+              }
+            : {},
+        images: {
+          deleteMany: {},
+          createMany: {
+            data: body.images.map((image: { url: string }) => ({
+              url: image.url,
+            })),
+          },
+        },
+        additionalInfoSections: {
+          deleteMany: {},
+          create: body.additionalInfoSections?.map(
+            (info: { title: string; description: string }) => ({
+              title: info.title,
+              description: info.description,
+            })
+          ),
+        },
+        categories: {
+          set: body.categories?.map((id: string) => ({ id })),
+        },
+      },
+    });
+
+    if (body.options) {
+      await prismadb.option.deleteMany({
+        where: { productId: params.productId },
+      });
+    }
+
+    const optionValues = await createOptionsAndValues(body, updatedProduct.id);
+
+    if (body.variants) {
+      await prismadb.variant.deleteMany({
+        where: { productId: updatedProduct.id },
+      });
+
+      for (const variant of body.variants) {
+        const selectedOptionValues = variant.title.includes("|")
+          ? variant.title.split("|").map((value: string) => {
+              const matchingOptionValue = optionValues.find(
+                (data) => data!.value === value
+              );
+              if (!matchingOptionValue)
+                throw new Error(`Option value "${value}" not found`);
+              return { id: matchingOptionValue.id };
+            })
+          : [
+              {
+                id: optionValues.find((data) => data!.value === variant.title)!
+                  .id,
+              },
+            ];
+
+        await prismadb.variant.create({
+          data: {
+            title: variant.title,
+            priceData: {
+              create: {
+                price: variant.price,
+                discountedPrice: body.discountedPrice,
+                currency: store.defaultCurrency,
+              },
+            },
+            costAndProfitData: variant.costofgoods
+              ? {
+                  create: {
+                    itemCost: variant.costofgoods,
+                    formattedItemCost:
+                      store.defaultCurrency + variant.costofgoods.toFixed(2) ||
+                      store.defaultCurrency + "0.00",
+                    profit:
+                      (body.discountedPrice!
+                        ? body.discountedPrice
+                        : variant.price) - variant.costofgoods,
+                    profitMargin:
+                      ((variant.price - variant.costofgoods) /
+                        (body.discountedPrice!
+                          ? body.discountedPrice
+                          : variant.price)) *
+                        100 ?? 0,
+                    formattedProfit:
+                      store.defaultCurrency +
+                      (
+                        (body.discountedPrice!
+                          ? body.discountedPrice
+                          : variant.price) - variant.costofgoods
+                      ).toFixed(2),
+                  },
+                }
+              : undefined,
+            stock:
+              variant.inventory || variant.status
+                ? {
+                    create: {
+                      trackInventory: variant.inventory ? true : false,
+                      quantity: variant.inventory ?? 0,
+                      inventoryStatus: variant.status ?? "IN_STOCK",
+                    },
+                  }
+                : undefined,
+            product: { connect: { id: updatedProduct.id } },
+            selectedOptions: { connect: selectedOptionValues },
+          },
+        });
+      }
+    }
+
+    return NextResponse.json(updatedProduct);
   } catch (error: any) {
-    console.error("[PRODUCT_PATCH]", error);
+    console.error("[PRODUCTS_PATCH]", error);
     return new NextResponse(error.message || "Internal error", { status: 500 });
   }
 }

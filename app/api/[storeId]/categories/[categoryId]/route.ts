@@ -20,7 +20,7 @@ export async function GET(
         ],
       },
       include: {
-        billboard: true,
+        products: true,
       },
     });
 
@@ -78,7 +78,7 @@ export async function PATCH(
 
     const body = await request.json();
 
-    const { name, billboardId } = body;
+    const { name, imageUrl, products } = body;
 
     if (!userId) {
       return new NextResponse("Unauthenticated", { status: 403 });
@@ -108,7 +108,15 @@ export async function PATCH(
       },
       data: {
         name,
-        billboardId: billboardId || null,
+        imageUrl: imageUrl || null,
+        products:
+          products && products.length > 0
+            ? {
+                connect: products.map((productId: string) => ({
+                  id: productId,
+                })),
+              }
+            : undefined,
       },
     });
 

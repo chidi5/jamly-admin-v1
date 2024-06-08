@@ -1,3 +1,6 @@
+import { $Enums, Category, Image } from "@prisma/client";
+import { EnumValues } from "zod";
+
 export type PaystackPlan = {
   name: string;
   amount: number;
@@ -58,17 +61,43 @@ export type Subscription = {
   updatedAt: Date;
 };
 
+export type Product = {
+  id: string;
+  storeId: string;
+  name: string;
+  handle: string;
+  productType: $Enums.ProductType;
+  description: string;
+  isFeatured: boolean;
+  isArchived: boolean;
+  manageVariants: boolean;
+  weight: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  images: Image[];
+};
+
 export type ProductData = {
   productId?: string;
   name: string;
   price: number;
-  handle: string;
+  discountedPrice: number;
+  weight: number;
   description: string;
-  categoryId: string;
+  categoryies: Category;
   isFeatured: boolean;
   isArchived: boolean;
+  manageVariants: boolean;
   storeId: string;
   images: { url: string }[];
+  stock: {
+    trackInventory: boolean;
+    quantity: number;
+    inventoryStatus: EnumValues;
+  };
+  costProfit: { itemCost: number; profit: number; profitMargin: number };
+  discount: { value: number; type: EnumValues };
   variants: { title: string; price: number; inventory: number }[];
   options: { optionName: string; optionValues: { name: string }[] }[];
+  additionalInfoSections: { title: string; description: string }[];
 };

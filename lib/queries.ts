@@ -1,18 +1,11 @@
 "use server";
 
 import { clerkClient, currentUser } from "@clerk/nextjs";
-import {
-  Invitation,
-  Prisma,
-  PrismaClient,
-  Role,
-  Store,
-  User,
-} from "@prisma/client";
+import { Invitation, Role, Store, User } from "@prisma/client";
 import { redirect } from "next/navigation";
+import slugify from "slugify";
 import prismadb from "./prismadb";
 import { ProductData } from "./types";
-import { DefaultArgs } from "@prisma/client/runtime/library";
 
 function generateRandomString(length: any) {
   return crypto.randomUUID().toString().slice(0, length);
@@ -23,9 +16,50 @@ export async function generateUniqueID() {
   do {
     uniqueID = generateRandomString(6) + "-" + generateRandomString(2);
   } while (await prismadb.store.findFirst({ where: { id: uniqueID } }));
-  //await prismadb.store('unique_ids').insertOne({ id: uniqueID });
   return uniqueID;
 }
+
+// generate Handle
+export const generateUniqueCategoryHandle = async (
+  name: string
+): Promise<string> => {
+  let uniqueHandle = slugify(name, { lower: true, strict: true });
+  let counter = 1;
+
+  while (
+    await prismadb.category.findFirst({ where: { handle: uniqueHandle } })
+  ) {
+    uniqueHandle = `${uniqueHandle}-${counter}`;
+    counter++;
+  }
+
+  return uniqueHandle;
+};
+
+export const generateUniqueProductHandle = async (
+  name: string
+): Promise<string> => {
+  let uniqueHandle = slugify(name, { lower: true, strict: true });
+  let counter = 1;
+
+  while (
+    await prismadb.product.findFirst({ where: { handle: uniqueHandle } })
+  ) {
+    uniqueHandle = `${uniqueHandle}-${counter}`;
+    counter++;
+  }
+
+  return uniqueHandle;
+};
+
+export const priceFormatter = async (locale: string, currency: string) => {
+  const formatter = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  });
+
+  return formatter;
+};
 
 export const getAuthUserDetails = async () => {
   const user = await currentUser();
@@ -43,6 +77,15 @@ export const getAuthUserDetails = async () => {
   });
 
   return userData;
+};
+
+export const getAuthUser = async () => {
+  const user = await currentUser();
+  if (!user) {
+    return;
+  }
+
+  return user;
 };
 
 export const saveActivityLogsNotification = async ({
@@ -392,35 +435,105 @@ export const revokeInvitation = async (
 };
 
 export const getTotalRevenue = async (storeId: string) => {
-  const paidOrders = await prismadb.order.findMany({
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Total revenue for the current month
+  const currentMonthPaidOrders = await prismadb.order.findMany({
     where: {
       storeId,
       isPaid: true,
+      createdAt: {
+        gte: startOfCurrentMonth,
+      },
     },
     include: {
       orderItems: true,
     },
   });
 
-  const totalRevenue = paidOrders.reduce((total, order) => {
+  const currentMonthTotalRevenue = currentMonthPaidOrders.reduce(
+    (total, order) => {
+      const orderTotal = order.orderItems.reduce((orderSum, item) => {
+        return orderSum + item.price.toNumber();
+      }, 0);
+      return total + orderTotal;
+    },
+    0
+  );
+
+  // Total revenue for the last month
+  const lastMonthPaidOrders = await prismadb.order.findMany({
+    where: {
+      storeId,
+      isPaid: true,
+      createdAt: {
+        gte: lastMonth,
+        lt: startOfCurrentMonth,
+      },
+    },
+    include: {
+      orderItems: true,
+    },
+  });
+
+  const lastMonthTotalRevenue = lastMonthPaidOrders.reduce((total, order) => {
     const orderTotal = order.orderItems.reduce((orderSum, item) => {
       return orderSum + item.price.toNumber();
     }, 0);
     return total + orderTotal;
   }, 0);
 
-  return totalRevenue;
+  const percentageChange = lastMonthTotalRevenue
+    ? ((currentMonthTotalRevenue - lastMonthTotalRevenue) /
+        lastMonthTotalRevenue) *
+      100
+    : 0;
+
+  return {
+    currentMonthTotalRevenue,
+    percentageChange,
+  };
 };
 
 export const getSalesCount = async (storeId: string) => {
-  const salesCount = await prismadb.order.count({
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Sales count for the current month
+  const currentMonthSalesCount = await prismadb.order.count({
     where: {
       storeId,
       isPaid: true,
+      createdAt: {
+        gte: startOfCurrentMonth,
+      },
     },
   });
 
-  return salesCount;
+  // Sales count for the last month
+  const lastMonthSalesCount = await prismadb.order.count({
+    where: {
+      storeId,
+      isPaid: true,
+      createdAt: {
+        gte: lastMonth,
+        lt: startOfCurrentMonth,
+      },
+    },
+  });
+
+  const percentageChange = lastMonthSalesCount
+    ? ((currentMonthSalesCount - lastMonthSalesCount) / lastMonthSalesCount) *
+      100
+    : 0;
+
+  return {
+    currentMonthSalesCount,
+    percentageChange,
+  };
 };
 
 export const getTotalStock = async (storeId: string) => {
@@ -429,15 +542,39 @@ export const getTotalStock = async (storeId: string) => {
       storeId,
     },
     include: {
-      variants: true,
+      stock: true,
+      variants: {
+        include: {
+          stock: true,
+        },
+      },
     },
   });
 
   const totalStock = products.reduce((total, product) => {
-    const inventory = product.variants.reduce((variantSum, item) => {
-      return variantSum + item.inventory;
+    // Calculate product stock
+    const productStock = product.stock
+      ? product.stock.trackInventory
+        ? product.stock.quantity ?? 0
+        : product.stock.inventoryStatus === "IN_STOCK"
+        ? 1 ?? 0
+        : 0
+      : 0;
+
+    // Calculate variants stock
+    const variantsStock = product.variants.reduce((variantSum, variant) => {
+      const variantStock = variant.stock
+        ? variant.stock.trackInventory
+          ? variant.stock.quantity ?? 0
+          : variant.stock.inventoryStatus === "IN_STOCK"
+          ? 1 ?? 0
+          : 0
+        : 0;
+
+      return variantSum + variantStock;
     }, 0);
-    return total + inventory;
+
+    return total + productStock + variantsStock;
   }, 0);
 
   return totalStock;
@@ -446,27 +583,12 @@ export const getTotalStock = async (storeId: string) => {
 export async function validateProductData(
   body: ProductData
 ): Promise<ProductData> {
-  const {
-    name,
-    price,
-    handle,
-    description,
-    categoryId,
-    isFeatured,
-    isArchived,
-    images,
-    variants,
-    options,
-  } = body;
+  const { name, price, description, images } = body;
 
   if (!name) throw new Error("Name is required");
   if (!price) throw new Error("Price is required");
-  if (!handle) throw new Error("Handle is required");
   if (!description) throw new Error("Description is required");
-  if (!categoryId) throw new Error("Category id is required");
   if (!images || !images.length) throw new Error("Images are required");
-  if (!variants || !variants.length) throw new Error("Variants are required");
-  if (!options || !options.length) throw new Error("Options are required");
 
   return body;
 }
@@ -481,114 +603,33 @@ export async function getStoreByUserId(storeId: string, userId: string) {
   return store;
 }
 
-export async function createOrUpdateProduct(
-  prisma: Omit<
-    PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
-    "$on" | "$connect" | "$disconnect" | "$use" | "$transaction" | "$extends"
-  >,
-  data: ProductData,
-  isNew = true
+export async function createOptionsAndValues(
+  data: { options: any },
+  productId: string
 ) {
-  const { productId, options, variants, images, ...rest } = data;
-
-  if (!isNew) {
-    // Delete existing options and variants
-    const productVariants = await prisma.variant.findMany({
-      where: { productId },
-      select: { selectedOptions: true },
-    });
-    const optionIds = new Set<string>();
-    productVariants.forEach((variant) => {
-      variant.selectedOptions.forEach((option) =>
-        optionIds.add(option.optionId)
-      );
-    });
-    const optionIdsArray = Array.from(optionIds);
-    for (const optionId of optionIdsArray) {
-      await prisma.optionValue.deleteMany({ where: { optionId } });
-    }
-    await prisma.option.deleteMany({
-      where: { id: { in: optionIdsArray }, productId },
-    });
-    await prisma.variant.deleteMany({ where: { productId } });
-  }
-
-  const product = isNew
-    ? await prisma.product.create({
-        data: {
-          ...rest,
-          images: {
-            createMany: {
-              data: images.map((image: { url: string }) => image),
-            },
-          },
-        },
-      })
-    : await prisma.product.update({
-        where: { id: productId },
-        data: {
-          ...rest,
-          images: {
-            deleteMany: {},
-            createMany: {
-              data: images.map((image: { url: string }) => image),
-            },
-          },
-        },
-      });
-
   const optionData: any[] = [];
   for (const option of data.options) {
-    const newOption = await prisma.option.create({
-      data: { productId: product.id, name: option.optionName },
+    const newOption = await prismadb.option.create({
+      data: { productId: productId, name: option.name },
     });
     optionData.push(
-      ...option.optionValues.map((value) => ({
-        value: value.name,
+      ...option.values.map((value: { value: any }) => ({
+        value: value.value,
         optionId: newOption.id,
       }))
     );
   }
   if (optionData.length) {
-    await prisma.optionValue.createMany({
+    await prismadb.optionValue.createMany({
       data: optionData,
       skipDuplicates: true,
     });
   }
 
   const promises = optionData.map((optionValue) =>
-    prisma.optionValue.findFirst({ where: optionValue })
+    prismadb.optionValue.findFirst({ where: optionValue })
   );
   const optionValues = await Promise.all(promises);
 
-  const variantData = data.variants.map((variant) => {
-    const selectedOptionValues = variant.title.includes("/")
-      ? variant.title.split("/").map((value) => {
-          const matchingOptionValue = optionValues.find(
-            (data) => data!.value === value
-          );
-          if (!matchingOptionValue)
-            throw new Error(`Option value "${value}" not found`);
-          return { id: matchingOptionValue.id };
-        })
-      : [
-          {
-            id: optionValues.find((data) => data!.value === variant.title)!.id,
-          },
-        ];
-
-    return {
-      title: variant.title,
-      price: variant.price,
-      inventory: variant.inventory,
-      productId: product.id,
-      selectedOptions: { connect: selectedOptionValues },
-    };
-  });
-
-  await Promise.all(
-    variantData.map((variant: any) => prisma.variant.create({ data: variant }))
-  );
-
-  return product;
+  return optionValues;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { useParams, useRouter } from "next/navigation";
@@ -13,32 +13,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
-import { CheckCircleIcon } from "lucide-react";
+import { CheckCircleIcon, Dot } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 type LaunchPadClientProps = {
-  data: Store;
+  store: Store;
+  product: number;
 };
 
-const LaunchPadClient = ({ data }: LaunchPadClientProps) => {
+const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
   const params = useParams();
   const router = useRouter();
 
   let connectedStripeAccount = false;
 
-  if (!data) return;
+  if (!store) return;
 
   const allDetailsExist =
-    data.address &&
-    data.address &&
-    data.storeLogo &&
-    data.city &&
-    data.companyEmail &&
-    data.companyPhone &&
-    data.country &&
-    data.name &&
-    data.state &&
-    data.zipCode;
+    store.address &&
+    store.address &&
+    store.storeLogo &&
+    store.city &&
+    store.companyEmail &&
+    store.companyPhone &&
+    store.country &&
+    store.name &&
+    store.state &&
+    store.zipCode;
 
   return (
     <>
@@ -70,56 +72,60 @@ const LaunchPadClient = ({ data }: LaunchPadClientProps) => {
                 </div>
                 <Button>Start</Button>
               </div>
-              <div className="flex justify-between items-center w-full border p-4 rounded-lg gap-2">
+              <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2">
                 <div className="flex md:items-center gap-4 flex-col md:!flex-row">
-                  <Image
-                    src="/paystacklogo.png"
-                    alt="app logo"
-                    height={80}
-                    width={80}
-                    className="rounded-md object-contain"
-                  />
-                  <p>
-                    Connect your paystack account to accept payments and see
-                    your dashboard.
-                  </p>
+                  <Dot />
+                  <p>Set up payment method</p>
                 </div>
-                {data.connectAccountId || connectedStripeAccount ? (
+                {store.connectAccountId || connectedStripeAccount ? (
                   <CheckCircleIcon
-                    size={50}
+                    size={30}
                     className=" text-primary p-2 flex-shrink-0"
                   />
                 ) : (
                   <Link
-                    className="bg-primary py-2 px-4 rounded-md text-white"
+                    className={cn(buttonVariants({ variant: "outline" }))}
                     href={"#"}
                   >
-                    Start
+                    Set up Payment
                   </Link>
                 )}
               </div>
-              <div className="flex justify-between items-center w-full border p-4 rounded-lg gap-2">
+              <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2 cursor-pointer">
                 <div className="flex md:items-center gap-4 flex-col md:!flex-row">
-                  <Image
-                    src={data.storeLogo ? data.storeLogo : "/empty.png"}
-                    alt="app logo"
-                    height={80}
-                    width={80}
-                    className="rounded-md object-contain"
-                  />
+                  <Dot />
                   <p> Fill in all your bussiness details</p>
                 </div>
                 {allDetailsExist ? (
                   <CheckCircleIcon
-                    size={50}
+                    size={30}
                     className="text-primary p-2 flex-shrink-0"
                   />
                 ) : (
                   <Link
-                    className="bg-primary py-2 px-4 rounded-md text-white"
-                    href={`/store/${data.id}/settings/account`}
+                    className={cn(buttonVariants({ variant: "outline" }))}
+                    href={`/store/${store.id}/settings/account`}
                   >
-                    Start
+                    Get Started
+                  </Link>
+                )}
+              </div>
+              <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2 cursor-pointer">
+                <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+                  <Dot />
+                  <p>Add your first product</p>
+                </div>
+                {product > 0 ? (
+                  <CheckCircleIcon
+                    size={30}
+                    className="text-primary p-2 flex-shrink-0"
+                  />
+                ) : (
+                  <Link
+                    className={cn(buttonVariants({ variant: "outline" }))}
+                    href={`/store/${store.id}/products/new`}
+                  >
+                    Add Product
                   </Link>
                 )}
               </div>

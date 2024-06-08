@@ -13,10 +13,14 @@ const LaunchPadPage = async ({ params }: LaunchPadProps) => {
 
   if (!store) redirect("/sign-in");
 
+  const product = await prismadb.product.count({
+    where: { storeId: params.storeId },
+  });
+
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <LaunchPadClient data={store} />
+        <LaunchPadClient store={store} product={product} />
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 import prismadb from "@/lib/prismadb";
 import React from "react";
 import dynamic from "next/dynamic";
+import ProductForm from "./components/product-form";
 
-const ProductForm = dynamic(
+/*const ProductForm = dynamic(
   () =>
     import(
       "@/app/(dashboard)/store/[storeId]/(routes)/products/[productId]/components/product-form"
@@ -10,7 +11,7 @@ const ProductForm = dynamic(
   {
     ssr: false,
   }
-);
+);*/
 
 const ProductPage = async ({
   params,
@@ -23,8 +24,22 @@ const ProductPage = async ({
     },
     include: {
       images: true,
+      priceData: true,
+      stock: true,
+      discount: true,
+      additionalInfoSections: true,
+      costAndProfitData: true,
+      categories: true,
+      options: {
+        include: {
+          values: true,
+        },
+      },
       variants: {
         include: {
+          priceData: true,
+          costAndProfitData: true,
+          stock: true,
           selectedOptions: {
             include: {
               option: true,

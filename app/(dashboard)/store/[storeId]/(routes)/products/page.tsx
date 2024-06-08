@@ -1,20 +1,30 @@
 import prismadb from "@/lib/prismadb";
+import { getAuthUserDetails, priceFormatter } from "@/lib/queries";
 import { format } from "date-fns";
 import ProductClient from "./components/client";
 import { ProductColumn } from "./components/columns";
-import { formatter } from "@/lib/utils";
 
 type ProductProps = {
   params: { storeId: string };
 };
 
 const ProductPage = async ({ params }: ProductProps) => {
+  const user = await getAuthUserDetails();
+  if (!user) return null;
+
+  const formatter = await priceFormatter(
+    user.Store!.locale,
+    user.Store!.defaultCurrency
+  );
+
   const products = await prismadb.product.findMany({
     where: {
       storeId: params.storeId,
     },
     include: {
-      category: true,
+      categories: true,
+      priceData: true,
+      variants: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -26,8 +36,8 @@ const ProductPage = async ({ params }: ProductProps) => {
     name: item.name,
     isFeatured: item.isFeatured,
     isArchived: item.isArchived,
-    price: formatter.format(item.price.toNumber()),
-    category: item.category.name,
+    variants: item.variants.length,
+    price: formatter.format(item.priceData!.price),
     createdAt: format(item.createdAt, "MMMM do, yyyy"),
   }));
 

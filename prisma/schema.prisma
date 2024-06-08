@@ -37,7 +37,6 @@ model Store {
   connectAccountId String?        @default("")
   customerId       String?        @default("")
   name             String
-  //userId     String
   storeLogo        String?        @db.Text
   companyEmail     String?        @db.Text
   companyPhone     String?
@@ -46,6 +45,8 @@ model Store {
   zipCode          String?
   state            String?
   country          String?
+  locale           String         @default("en-NG")
+  defaultCurrency  String
   users            User[]
   billboards       Billboard[]    @relation("StoreToBillboard")
   categories       Category[]     @relation("StoreToCategory")
@@ -59,65 +60,81 @@ model Store {
 }
 
 model Billboard {
-  id         String     @id @default(uuid())
-  storeId    String
-  store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id], onDelete: Cascade)
-  label      String
-  isBanner   Boolean    @default(false)
-  imageUrl   String
-  categories Category[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id        String   @id @default(uuid())
+  storeId   String
+  store     Store    @relation("StoreToBillboard", fields: [storeId], references: [id], onDelete: Cascade)
+  label     String
+  isBanner  Boolean  @default(false)
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([storeId])
 }
 
 model Category {
-  id          String     @id @default(uuid())
-  storeId     String // Foreign Key to Store
-  store       Store      @relation("StoreToCategory", fields: [storeId], references: [id], onDelete: Cascade)
-  billboardId String? // Foreign Key to Billboard
-  billboard   Billboard? @relation(fields: [billboardId], references: [id])
-  name        String
-  handle      String
-  products    Product[]  @relation("CategoryToProduct")
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id         String    @id @default(uuid())
+  storeId    String
+  store      Store     @relation("StoreToCategory", fields: [storeId], references: [id], onDelete: Cascade)
+  name       String
+  handle     String
+  imageUrl   String?
+  isFeatured Boolean   @default(false)
+  products   Product[] @relation("CategoriesOnProduct")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now())
 
   @@unique([storeId, handle])
   @@index([storeId])
-  @@index([billboardId])
+}
+
+enum ProductType {
+  PHYSICAL
+  DIGITAL
 }
 
 model Product {
-  id          String      @id @default(uuid())
-  storeId     String // Foreign Key to Store
-  store       Store       @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
-  categoryId  String // Foreign Key to Category
-  category    Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
-  name        String
-  handle      String
-  price       Decimal
-  description String      @db.Text
-  isFeatured  Boolean     @default(false)
-  isArchived  Boolean     @default(false)
-  options     Option[] // Relation to Option model
-  variants    Variant[] // Relation to Variant model
-  images      Image[] // Relation to Image model
-  orderItems  OrderItem[] // Relation to Order model
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                     String                  @id @default(uuid())
+  storeId                String
+  store                  Store                   @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
+  name                   String
+  handle                 String
+  productType            ProductType             @default(PHYSICAL)
+  description            String                  @db.Text
+  isFeatured             Boolean                 @default(false)
+  isArchived             Boolean                 @default(false)
+  manageVariants         Boolean                 @default(false)
+  weight                 Float?
+  priceData              PriceData?
+  costAndProfitData      CostAndProfitData?
+  stock                  Stock?
+  discount               Discount?
+  additionalInfoSections AdditionalInfoSection[]
+  categories             Category[]              @relation("CategoriesOnProduct")
+  options                Option[]
+  variants               Variant[]
+  images                 Image[]
+  orderItems             OrderItem[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 
   @@unique([storeId, handle])
   @@index([storeId])
-  @@index([categoryId])
+}
+
+model AdditionalInfoSection {
+  id          String  @id @default(uuid())
+  title       String  @db.VarChar(50)
+  description String  @db.VarChar(16000)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Order {
   id         String      @id @default(uuid())
-  storeId    String // Foreign Key to Store
+  storeId    String
   store      Store       @relation("StoreToOrder", fields: [storeId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[] // Relation to OrderItem model
+  orderItems OrderItem[]
   isPaid     Boolean     @default(false)
   phone      String      @default("")
   address    String      @default("")
@@ -127,13 +144,12 @@ model Order {
   @@index([storeId])
 }
 
-// Intermediary for a many-to-many relationship
 model OrderItem {
   id        String  @id @default(uuid())
-  orderId   String // Foreign Key to Order
+  orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  price     Decimal // Store the price of the product variant here
-  productId String // Foreign Key to Product
+  price     Decimal
+  productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
@@ -141,13 +157,14 @@ model OrderItem {
 }
 
 model Variant {
-  id              String        @id @default(uuid())
-  title           String
-  productId       String // Foreign key to Product
-  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  price           Decimal
-  inventory       Int
-  selectedOptions OptionValue[] @relation("VariantOptions") // Relation to OptionValues
+  id                String             @id @default(uuid())
+  title             String
+  productId         String
+  product           Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceData         PriceData?
+  costAndProfitData CostAndProfitData?
+  stock             Stock?
+  selectedOptions   OptionValue[]      @relation("VariantOptions")
 
   @@index([productId])
 }
@@ -155,9 +172,9 @@ model Variant {
 model Option {
   id        String        @id @default(uuid())
   name      String
-  productId String // Foreign key to Product
+  productId String
   product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  values    OptionValue[] // An Option has many OptionValues
+  values    OptionValue[]
 }
 
 model OptionValue {
@@ -172,13 +189,67 @@ model OptionValue {
 
 model Image {
   id        String   @id @default(uuid())
-  productId String // Foreign Key to Product
+  productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  url       String // URL of the image
+  url       String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([productId])
+}
+
+model PriceData {
+  id              String   @id @default(uuid())
+  currency        String
+  price           Float
+  discountedPrice Float?
+  product         Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId       String?  @unique
+  variant         Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId       String?  @unique
+}
+
+model CostAndProfitData {
+  id                String   @id @default(uuid())
+  itemCost          Float
+  formattedItemCost String
+  profit            Float?
+  formattedProfit   String
+  profitMargin      Float?
+  product           Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId         String?  @unique
+  variant           Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId         String?  @unique
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  PARTIALLY_OUT_OF_STOCK
+}
+
+model Stock {
+  id              String          @id @default(uuid())
+  trackInventory  Boolean
+  quantity        Int?
+  inventoryStatus InventoryStatus
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId       String?         @unique
+  variant         Variant?        @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId       String?         @unique
+}
+
+enum DiscountType {
+  AMOUNT
+  PERCENT
+}
+
+model Discount {
+  id        String       @id @default(uuid())
+  type      DiscountType
+  value     Float
+  productId String?      @unique
+  product   Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 enum InvitationStatus {

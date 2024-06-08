@@ -7,7 +7,7 @@ export type CategoryColumn = {
   id: string;
   name: string;
   handle: string;
-  billboardLabel: string;
+  isFeatured: boolean;
   createdAt: string;
 };
 
@@ -21,9 +21,8 @@ export const columns: ColumnDef<CategoryColumn>[] = [
     header: "Handle",
   },
   {
-    accessorKey: "billboard",
-    header: "Billboard",
-    cell: ({ row }) => row.original.billboardLabel,
+    accessorKey: "isFeatured",
+    header: "Featured",
   },
   {
     accessorKey: "createdAt",
