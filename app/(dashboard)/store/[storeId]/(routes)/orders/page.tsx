@@ -1,8 +1,8 @@
 import prismadb from "@/lib/prismadb";
-import { formatter } from "@/lib/utils";
 import { format } from "date-fns";
 import OrderClient from "./components/client";
 import { OrderColumn } from "./components/columns";
+import { getAuthUserDetails, priceFormatter } from "@/lib/queries";
 
 type OrderProps = {
   params: { storeId: string };
@@ -18,7 +18,12 @@ const OrderPage = async ({ params }: OrderProps) => {
         include: {
           product: {
             include: {
-              variants: true,
+              priceData: true,
+              variants: {
+                include: {
+                  priceData: true,
+                },
+              },
             },
           },
         },
@@ -29,6 +34,14 @@ const OrderPage = async ({ params }: OrderProps) => {
     },
   });
 
+  const user = await getAuthUserDetails();
+  if (!user) return null;
+
+  const formatter = await priceFormatter(
+    user.Store!.locale,
+    user.Store!.defaultCurrency
+  );
+
   const formattedOrders: OrderColumn[] = orders.map((item) => ({
     id: item.id,
     phone: item.phone,
@@ -37,10 +50,20 @@ const OrderPage = async ({ params }: OrderProps) => {
       .map((orderItem) => orderItem.product.name)
       .join(", "),
     totalPrice: formatter.format(
-      item.orderItems.reduce((total, item) => {
-        return (
-          total + Number(item.product.variants.map((variant) => variant.price))
-        );
+      item.orderItems.reduce((total, orderItem) => {
+        if (orderItem.product.manageVariants) {
+          // Sum variant prices
+          const variantTotal = orderItem.product.variants.reduce(
+            (variantSum, variant) => {
+              return variantSum + Number(variant.priceData?.price || 0);
+            },
+            0
+          );
+          return total + variantTotal;
+        } else {
+          // Sum product price
+          return total + Number(orderItem.product.priceData?.price || 0);
+        }
       }, 0)
     ),
     isPaid: item.isPaid,
