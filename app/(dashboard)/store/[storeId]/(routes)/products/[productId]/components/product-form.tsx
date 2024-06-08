@@ -288,23 +288,14 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       "costProfit.profitMargin",
       parseFloat(profitMargin.toFixed(2))
     );
-  }, [isOnSale, price, discount, discountType, itemCost, form.setValue]);
-
-  useEffect(() => {
-    if (!isHidden) {
-      handleVariant();
-      clearStockShip();
-    } else {
-      clearVariants();
-    }
-  }, [isHidden]);
+  }, [isOnSale, price, discount, discountType, itemCost, form]);
 
   useEffect(() => {
     if (optionFields.length === 0) {
       setIsHidden(true);
       form.setValue("manageVariants", false);
     }
-  }, [optionFields]);
+  }, [optionFields, form]);
 
   function generateVariantTitles(options: any[]) {
     let titles: string[] = [];
@@ -377,6 +368,15 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       inventoryStatus: undefined,
     });
   };
+
+  useEffect(() => {
+    if (!isHidden) {
+      handleVariant();
+      clearStockShip();
+    } else {
+      clearVariants();
+    }
+  }, [isHidden, handleVariant, clearStockShip, clearVariants]);
 
   const handleAddSection = (data: z.infer<typeof AdditionalInfoSchema>) => {
     if (currentSection) {
