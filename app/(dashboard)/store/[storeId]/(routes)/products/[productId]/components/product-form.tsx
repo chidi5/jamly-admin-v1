@@ -700,7 +700,10 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                                           className="flex"
                                         >
                                           {discountOptions.map((option) => (
-                                            <FormItem className="flex items-center space-y-0 p-1 last:pr-1 rounded-md">
+                                            <FormItem
+                                              key={option.value}
+                                              className="flex items-center space-y-0 p-1 last:pr-1 rounded-md"
+                                            >
                                               <FormControl>
                                                 <RadioGroupItem
                                                   value={option.value}
