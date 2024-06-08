@@ -57,7 +57,7 @@ import axios from "axios";
 import "easymde/dist/easymde.min.css";
 import { Plus, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import Markdown from "react-markdown";
 import SimpleMDE from "react-simplemde-editor";
@@ -316,7 +316,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     return titles;
   }
 
-  const handleVariant = () => {
+  const handleVariant = useCallback(() => {
     const options = form.getValues("options");
     if (!options) return null;
     const newVariantTitles = generateVariantTitles(options);
@@ -354,20 +354,20 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
         status: inventoryStatus,
       });
     });
-  };
+  }, [initialData, variantFields, appendVariant, form, setIsHidden]);
 
-  const clearVariants = () => {
+  const clearVariants = useCallback(() => {
     form.setValue("variants", []);
-  };
+  }, [form]);
 
-  const clearStockShip = () => {
+  const clearStockShip = useCallback(() => {
     //form.setValue("weight", 0);
     form.setValue("stock", {
       trackInventory: false,
       quantity: undefined,
       inventoryStatus: undefined,
     });
-  };
+  }, [form]);
 
   useEffect(() => {
     if (!isHidden) {
