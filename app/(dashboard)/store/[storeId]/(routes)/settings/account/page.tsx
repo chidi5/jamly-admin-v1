@@ -1,10 +1,10 @@
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
 import prismadb from "@/lib/prismadb";
 import { getUser } from "@/lib/queries";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import SettingsForm from "./settings-form";
-import { Separator } from "@/components/ui/separator";
-import { Heading } from "@/components/ui/heading";
+import AccountSettingsForm from "./settings-form";
 
 type SettingsProps = {
   params: { storeId: string };
@@ -33,7 +33,7 @@ const AccountsPage = async ({ params }: SettingsProps) => {
         className="!text-lg font-medium"
       />
       <Separator />
-      <SettingsForm initialData={store} user={user} />
+      <AccountSettingsForm initialData={store} user={user} />
     </div>
   );
 };

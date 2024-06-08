@@ -202,7 +202,7 @@ const CategoryForm = ({
                       <FormItem>
                         <div className="mt-4">
                           {field.value!.length > 0 ? (
-                            <div className="grid grid-cols-4 gap-6">
+                            <div className="grid grid-cols-4 gap-4">
                               {field.value!.map((productId) => {
                                 const product = products.find(
                                   (p) => p.id === productId
@@ -210,7 +210,7 @@ const CategoryForm = ({
                                 return (
                                   <div
                                     key={productId}
-                                    className="relative w-[150px] h-[150px] rounded-md overflow-hidden"
+                                    className="relative w-[180px] h-[180px] rounded-md overflow-hidden"
                                   >
                                     <div className="z-10 absolute top-2 right-2">
                                       <Button

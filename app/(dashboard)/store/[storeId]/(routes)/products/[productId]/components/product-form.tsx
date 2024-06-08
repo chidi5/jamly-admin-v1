@@ -131,7 +131,9 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     typeof optionSchema
   > | null>(null);
 
-  const [isOnSale, setIsOnSale] = useState(false);
+  const [isOnSale, setIsOnSale] = useState(
+    initialData?.discount ? true : false
+  );
   const [isHidden, setIsHidden] = useState(
     initialData?.manageVariants ? false : true
   );
@@ -193,7 +195,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
           images: [],
           price: 0,
           discountedPrice: undefined,
-          weight: undefined,
+          weight: 0,
           description: "",
           categories: [],
           isFeatured: false,
@@ -739,7 +741,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                                 min={0}
                                 disabled={loading}
                                 placeholder="10"
-                                className="!pe-36 font-medium"
+                                className="!pe-24 font-medium"
                                 {...field}
                               />
                             </div>
