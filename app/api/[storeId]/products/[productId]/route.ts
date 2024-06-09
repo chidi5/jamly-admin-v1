@@ -197,7 +197,7 @@ export async function PATCH(
           : undefined,
         stock: body.manageVariants
           ? {
-              delete: true,
+              delete: existingProduct.stock ? true : undefined,
             }
           : body.stock
           ? {
@@ -216,7 +216,7 @@ export async function PATCH(
             }
           : undefined,
         discount:
-          body.discount.value !== undefined
+          body.discount && body.discount.value !== undefined
             ? {
                 upsert: {
                   create: {

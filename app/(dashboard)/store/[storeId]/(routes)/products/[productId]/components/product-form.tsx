@@ -57,7 +57,7 @@ import axios from "axios";
 import "easymde/dist/easymde.min.css";
 import { Plus, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import Markdown from "react-markdown";
 import SimpleMDE from "react-simplemde-editor";
@@ -299,7 +299,19 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
     }
   }, [optionFields, form]);
 
-  const generateVariantTitles = useCallback((options: any[]) => {
+  useEffect(() => {
+    if (!isHidden) {
+      {
+        initialData?.variants.length === 0 && handleVariant();
+      }
+      clearStockShip();
+    } else {
+      clearVariants();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHidden, initialData]);
+
+  const generateVariantTitles = (options: any[]) => {
     let titles: string[] = [];
 
     function buildTitles(index: number, prefix: string) {
@@ -316,7 +328,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
 
     buildTitles(0, "");
     return titles;
-  }, []);
+  };
 
   const handleVariant = useCallback(() => {
     const options = form.getValues("options");
@@ -373,16 +385,6 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
       inventoryStatus: undefined,
     });
   }, [form]);
-
-  useEffect(() => {
-    if (!isHidden) {
-      handleVariant();
-      clearStockShip();
-    } else {
-      clearVariants();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHidden, clearStockShip, clearVariants]);
 
   const handleAddSection = (data: z.infer<typeof AdditionalInfoSchema>) => {
     if (currentSection) {
@@ -862,10 +864,9 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                   </CardDescription>
                 </CardHeader>
                 {optionFields.map((field, index) => (
-                  <>
+                  <Fragment key={field.id}>
                     <CardContent
                       className="w-full py-5 hover:bg-slate-50 cursor-pointer"
-                      key={field.id}
                       onClick={() => {
                         setInfoIndex(index);
                         setCurrentOption(field);
@@ -886,7 +887,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                       </div>
                     </CardContent>
                     <Separator />
-                  </>
+                  </Fragment>
                 ))}
                 <Button
                   type="button"
