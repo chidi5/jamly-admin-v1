@@ -302,7 +302,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
   useEffect(() => {
     if (!isHidden) {
       {
-        initialData?.variants.length === 0 && handleVariant();
+        initialData?.variants ?? handleVariant();
       }
       clearStockShip();
     } else {
