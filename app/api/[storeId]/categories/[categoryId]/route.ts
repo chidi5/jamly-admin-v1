@@ -77,7 +77,6 @@ export async function PATCH(
     const { userId } = auth();
 
     const body = await request.json();
-
     const { name, imageUrl, products, isFeatured } = body;
 
     if (!userId) {
@@ -110,14 +109,9 @@ export async function PATCH(
         name,
         isFeatured,
         imageUrl: imageUrl || null,
-        products:
-          products && products.length > 0
-            ? {
-                connect: products.map((productId: string) => ({
-                  id: productId,
-                })),
-              }
-            : undefined,
+        products: {
+          set: products?.map((id: string) => ({ id })),
+        },
       },
     });
 

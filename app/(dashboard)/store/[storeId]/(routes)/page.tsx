@@ -1,4 +1,5 @@
 import Overview from "@/components/overview";
+import StoreFrontButton from "@/components/store-front-button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { Metadata } from "next";
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description: "Store Dashboard.",
 };
 
-const DashboardPage = async ({ params }: { params: { storeId: string } }) => {
+const DashboardPage = ({ params }: { params: { storeId: string } }) => {
   return (
     <>
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -16,6 +17,7 @@ const DashboardPage = async ({ params }: { params: { storeId: string } }) => {
           <Heading title="Dashboard" description="Your store overview" />
           <div className="flex items-center space-x-2">
             {/*<CalendarDateRangePicker />*/}
+            <StoreFrontButton storeId={params.storeId} />
           </div>
         </div>
         <Separator />
