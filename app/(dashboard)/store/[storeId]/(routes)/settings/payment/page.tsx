@@ -4,13 +4,15 @@ import prismadb from "@/lib/prismadb";
 import { getUser } from "@/lib/queries";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import AccountSettingsForm from "./settings-form";
+import React from "react";
+import PaymentForm from "./payment-form";
+import { Dot } from "lucide-react";
 
-type SettingsProps = {
+type PaymentProps = {
   params: { storeId: string };
 };
 
-const AccountsPage = async ({ params }: SettingsProps) => {
+const Paymentpage = async ({ params }: PaymentProps) => {
   const { userId } = auth();
   if (!userId) redirect("/sign-in");
 
@@ -24,18 +26,23 @@ const AccountsPage = async ({ params }: SettingsProps) => {
   });
 
   if (!store) redirect("/store");
-
   return (
     <div className="space-y-6">
-      <Heading
-        title="Account"
-        description="Update your account settings. Set your preferred language and timezone."
-        className="!text-2xl font-medium"
-      />
+      <div className="flex justify-between items-center">
+        <Heading
+          title="Accept Payments"
+          description="Add your payment provider so your customers can pay."
+          className="!text-2xl font-medium"
+        />
+        <div className="flex items-center text-indigo-600">
+          <Dot />
+          &nbsp;{store.country}
+        </div>
+      </div>
       <Separator />
-      <AccountSettingsForm initialData={store} user={user} />
+      <PaymentForm store={store} />
     </div>
   );
 };
 
-export default AccountsPage;
+export default Paymentpage;

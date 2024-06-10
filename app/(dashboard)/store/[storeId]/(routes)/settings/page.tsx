@@ -8,7 +8,7 @@ export default function SettingsProfilePage() {
       <Heading
         title="Profile"
         description="Update your profile settings."
-        className="!text-lg font-medium"
+        className="!text-2xl font-medium"
       />
       <Separator />
       <ProfileForm />

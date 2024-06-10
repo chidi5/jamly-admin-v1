@@ -47,7 +47,7 @@ export default async function SettingsLayout({
     },
     {
       title: "Payment",
-      href: `/store/${params.storeId}/settings/account`,
+      href: `/store/${params.storeId}/settings/payment`,
     },
   ];
 

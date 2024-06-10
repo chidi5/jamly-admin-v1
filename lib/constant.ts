@@ -35,3 +35,29 @@ export const pricingCards = [
     priceId: "PLN_4elei0drizjfiie",
   },
 ];
+
+export const paymentOptions = [
+  {
+    id: "1",
+    Nigeria: [
+      {
+        name: "Paystack",
+        src: "/paystack.svg",
+        description: "Accept Debit Cards, Transfers with Paystack",
+        href: "#",
+      },
+      {
+        name: "Flutterwave",
+        src: "/flutterwave.png",
+        description: "Accept Debit Cards, Transfers with Flutterwave",
+        href: "#",
+      },
+      {
+        name: "Paypal",
+        src: "/paypal.png",
+        description: "Accept Debit Cards with Paypal",
+        href: "#",
+      },
+    ],
+  },
+];

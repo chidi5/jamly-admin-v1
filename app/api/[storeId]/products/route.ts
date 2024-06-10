@@ -205,7 +205,7 @@ export async function GET(
     const products = await prismadb.product.findMany({
       where: {
         storeId: params.storeId,
-        isFeatured: isFeatured ? true : false,
+        isFeatured: isFeatured ? true : undefined,
         isArchived: false,
         categories: categoryIds
           ? {
