@@ -40,7 +40,7 @@ const PaymentForm = ({ store }: PaymentFormProps) => {
                   src={option.src}
                   fill
                   className="rounded-md object-cover p-6 bg-background"
-                  alt="avatar image"
+                  alt={option.name}
                 />
               </div>
               <div>

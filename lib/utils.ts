@@ -21,6 +21,7 @@ export async function getCountryCodeByIP(): Promise<CountryData> {
   const GEOLOCATION_API_URL = `https://ipapi.co/json/`;
 
   const response = await axios.get(GEOLOCATION_API_URL);
+  console.log(response);
   return {
     country: response.data.country_name,
     currency: response.data.currency || "NGN",

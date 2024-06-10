@@ -5,7 +5,7 @@ import { getUser } from "@/lib/queries";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
-import PaymentForm from "./payment-form";
+import PaymentForm from "@/app/(dashboard)/store/[storeId]/(routes)/settings/payment/payment-form";
 import { Dot } from "lucide-react";
 
 type PaymentProps = {
