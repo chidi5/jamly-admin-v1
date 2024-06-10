@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const id = await generateUniqueID();
-    const { currency, language } = await getCountryCodeByIP();
+    const { currency, language, country } = await getCountryCodeByIP();
 
     const { name, customerId } = body;
 
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         customerId,
         locale: language,
         defaultCurrency: currency,
+        country: country,
         users: { connect: { id: userData?.id } },
       },
     });
