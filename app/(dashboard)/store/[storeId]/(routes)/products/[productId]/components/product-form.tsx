@@ -87,11 +87,6 @@ interface Variant {
   selectedOptions: { option: { name: string }; value: any }[];
 }
 
-const discountOptions = [
-  { value: "AMOUNT", label: "NGN" },
-  { value: "PERCENT", label: "%" },
-];
-
 type ProductFormProps = {
   initialData:
     | (Product & {
@@ -107,15 +102,25 @@ type ProductFormProps = {
       })
     | null;
   categories: Category[];
+  currency: string;
 };
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
-const ProductForm = ({ initialData, categories }: ProductFormProps) => {
+const ProductForm = ({
+  initialData,
+  categories,
+  currency,
+}: ProductFormProps) => {
   const params = useParams();
   const router = useRouter();
   const origin = useOrigin();
   const { setOpen: setMoadlOpen } = useModal();
+
+  const discountOptions = [
+    { value: "AMOUNT", label: currency },
+    { value: "PERCENT", label: "%" },
+  ];
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -655,7 +660,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                           <FormControl>
                             <div className="relative mb-6">
                               <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none font-bold">
-                                NGN
+                                {currency}
                               </div>
                               <Input
                                 type="number"
@@ -761,7 +766,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                           <FormControl>
                             <div className="relative mb-6">
                               <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none font-bold">
-                                NGN
+                                {currency}
                               </div>
                               <Input
                                 type="number"
@@ -807,7 +812,7 @@ const ProductForm = ({ initialData, categories }: ProductFormProps) => {
                           <FormControl>
                             <div className="relative mb-6">
                               <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none font-bold">
-                                NGN
+                                {currency}
                               </div>
                               <Input
                                 type="number"

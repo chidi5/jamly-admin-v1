@@ -18,6 +18,13 @@ const ProductPage = async ({
 }: {
   params: { productId: string; storeId: string };
 }) => {
+  const store = await prismadb.store.findUnique({
+    where: { id: params.storeId },
+    select: { defaultCurrency: true },
+  });
+
+  if (!store) return null;
+
   const product = await prismadb.product.findUnique({
     where: {
       id: params.productId,
@@ -59,7 +66,11 @@ const ProductPage = async ({
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <ProductForm categories={categories} initialData={product} />
+        <ProductForm
+          categories={categories}
+          currency={store.defaultCurrency}
+          initialData={product}
+        />
       </div>
     </div>
   );
