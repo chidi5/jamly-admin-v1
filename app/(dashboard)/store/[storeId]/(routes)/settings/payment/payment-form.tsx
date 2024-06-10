@@ -20,50 +20,85 @@ const PaymentForm = ({ store }: PaymentFormProps) => {
     }
     return [];
   }
-  const countryOption = getPaymentOptionsForCountry(store, paymentOptions);
+  const countryOption: [] = getPaymentOptionsForCountry(store, paymentOptions);
   return (
     <div>
-      {countryOption.map(
-        (option: {
-          name: string;
-          src: string;
-          description: string;
-          href: string;
-        }) => (
-          <div
-            key={option.name}
-            className="flex justify-between items-center w-full border px-8 py-8 rounded-lg gap-2 mb-6"
-          >
-            <div className="flex md:items-center gap-4 flex-col md:!flex-row">
-              <div className="h-24 w-24 border rounded-lg relative flex-none">
-                <Image
-                  src={option.src}
-                  fill
-                  className="rounded-md object-cover p-6 bg-background"
-                  alt={option.name}
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-medium">{option.name}</h2>
-                <p>{option.description}</p>
-              </div>
-            </div>
-
-            {store.connectAccountId ? (
-              <CheckCircleIcon
-                size={30}
-                className=" text-primary p-2 flex-shrink-0"
-              />
-            ) : (
-              <Link
-                className={cn(buttonVariants({ variant: "outline" }))}
-                href={option.href}
+      {countryOption.length > 0 ? (
+        <div>
+          {countryOption.map(
+            (option: {
+              name: string;
+              src: string;
+              description: string;
+              href: string;
+            }) => (
+              <div
+                key={option.name}
+                className="flex justify-between items-center w-full border px-8 py-8 rounded-lg gap-2 mb-6"
               >
-                Connect
-              </Link>
-            )}
+                <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+                  <div className="h-24 w-24 border rounded-lg relative flex-none">
+                    <Image
+                      src={option.src}
+                      fill
+                      className="rounded-md object-contain p-5 bg-background"
+                      alt={option.name}
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-medium">{option.name}</h2>
+                    <p>{option.description}</p>
+                  </div>
+                </div>
+
+                {store.connectAccountId ? (
+                  <CheckCircleIcon
+                    size={30}
+                    className=" text-primary p-2 flex-shrink-0"
+                  />
+                ) : (
+                  <Link
+                    className={cn(buttonVariants({ variant: "outline" }))}
+                    href={option.href}
+                  >
+                    Connect
+                  </Link>
+                )}
+              </div>
+            )
+          )}
+        </div>
+      ) : (
+        <div className="flex justify-between items-center w-full border px-8 py-8 rounded-lg gap-2 mb-6">
+          <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+            <div className="h-24 w-24 border rounded-lg relative flex-none">
+              <Image
+                src="/stripe.png"
+                fill
+                className="rounded-md object-contain p-4 bg-background"
+                alt="stripe"
+              />
+            </div>
+            <div>
+              <h2 className="text-xl font-medium">Stripe</h2>
+              <p>Accept Debit/Credit card from your customers</p>
+            </div>
           </div>
-        )
+
+          {store.connectAccountId ? (
+            <CheckCircleIcon
+              size={30}
+              className=" text-primary p-2 flex-shrink-0"
+            />
+          ) : (
+            <Link
+              className={cn(buttonVariants({ variant: "outline" }))}
+              href={"#"}
+            >
+              Connect
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );
