@@ -1,6 +1,5 @@
 import prismadb from "@/lib/prismadb";
 import { generateUniqueID, getUser, initUser } from "@/lib/queries";
-import { getCountryCodeByIP } from "@/lib/utils";
 import { currentUser } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,9 +9,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const id = await generateUniqueID();
-    const { currency, language, country } = await getCountryCodeByIP();
 
-    const { name, customerId } = body;
+    const { name, customerId, country, currency, language } = body;
 
     if (!user) {
       return new NextResponse("Unauthorized", { status: 403 });

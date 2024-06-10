@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import GetUserLocation from "../get-user-location";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -35,6 +36,7 @@ const StoreModal = () => {
   const { user } = useUser();
 
   const [loading, setLoading] = useState(false);
+  const [location, setLocation] = useState({});
   const { toast } = useToast();
   const router = useRouter();
 
@@ -63,7 +65,8 @@ const StoreModal = () => {
 
       const dataToSend = {
         ...values,
-        customerId: customerId,
+        customerId,
+        ...location,
       };
       const response = await axios.post("/api/stores", dataToSend);
       toast({ description: "Store created successfully" });
@@ -94,6 +97,7 @@ const StoreModal = () => {
       onClose={storeModal.onClose}
     >
       <div>
+        <GetUserLocation setLocation={setLocation} />
         <div className="space-y-4 py-2 pb-4">
           <div className="space-y-2">
             <Form {...form}>
