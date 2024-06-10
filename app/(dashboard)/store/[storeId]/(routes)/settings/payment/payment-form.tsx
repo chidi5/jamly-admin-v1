@@ -3,11 +3,8 @@ import { paymentOptions } from "@/lib/constant";
 import { cn } from "@/lib/utils";
 import { Store } from "@prisma/client";
 import { CheckCircleIcon } from "lucide-react";
-import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
-import { UrlObject } from "url";
 
 type PaymentFormProps = {
   store: Store;
