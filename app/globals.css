@@ -9,8 +9,13 @@ body,
   font-size: small;
 }
 
+.CodeMirror,
+.CodeMirror-scroll {
+  min-height: 100px !important;
+}
+
 .CodeMirror {
-  height: 150px !important;
+  height: 200px !important;
 }
 
 @layer base {
