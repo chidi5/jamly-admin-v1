@@ -17,7 +17,12 @@ const OrderClient = ({ data }: OrderClientProps) => {
         description="Manage orders for your store"
       />
       <Separator />
-      <DataTable searchKey="products" columns={columns} data={data} />
+      <DataTable
+        searchKey="products"
+        columns={columns}
+        data={data}
+        type="order"
+      />
     </>
   );
 };

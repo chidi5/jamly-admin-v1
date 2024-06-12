@@ -2,7 +2,10 @@
 
 import { clerkClient, currentUser } from "@clerk/nextjs";
 import { Invitation, Role, Store, User } from "@prisma/client";
+import { write } from "fast-csv";
+import fs from "fs";
 import { redirect } from "next/navigation";
+import path from "path";
 import slugify from "slugify";
 import prismadb from "./prismadb";
 import { ProductData } from "./types";
@@ -633,3 +636,171 @@ export async function createOptionsAndValues(
 
   return optionValues;
 }
+
+const flattenJSON = (data: any) => {
+  const result: any = {};
+
+  const recurse = (cur: any, prop: string) => {
+    if (Object(cur) !== cur) {
+      result[prop] = cur;
+    } else if (Array.isArray(cur)) {
+      for (let i = 0; i < cur.length; i++) {
+        recurse(cur[i], prop + "[" + i + "]");
+      }
+      if (cur.length === 0) {
+        result[prop] = [];
+      }
+    } else {
+      let isEmpty = true;
+      for (const p in cur) {
+        isEmpty = false;
+        recurse(cur[p], prop ? prop + "." + p : p);
+      }
+      if (isEmpty && prop) {
+        result[prop] = {};
+      }
+    }
+  };
+
+  recurse(data, "");
+  return result;
+};
+
+export const exportProduct = async (products: []) => {
+  try {
+    const productIdsArray = products.map(
+      (product: { id: string }) => product.id
+    );
+
+    const fetchedProducts = await prismadb.product.findMany({
+      where: {
+        id: {
+          in: productIdsArray,
+        },
+      },
+      include: {
+        images: true,
+        priceData: true,
+        costAndProfitData: true,
+        discount: true,
+        stock: true,
+        categories: true,
+        additionalInfoSections: true,
+        options: true,
+        variants: {
+          include: {
+            priceData: true,
+            costAndProfitData: true,
+            stock: true,
+            selectedOptions: {
+              include: {
+                option: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const flattenedProducts = fetchedProducts.map((product) =>
+      flattenJSON(product)
+    );
+
+    const filePath = path.join(process.cwd(), "public", "products.csv");
+    const ws = fs.createWriteStream(filePath);
+
+    return new Promise<string>((resolve, reject) => {
+      write(flattenedProducts, { headers: true })
+        .pipe(ws)
+        .on("finish", () => {
+          resolve("/products.csv");
+        })
+        .on("error", (err) => {
+          console.error(err);
+          reject(new Error("Error writing CSV file"));
+        });
+    });
+  } catch (error) {
+    console.error("Error exporting products:", error);
+    throw error;
+  }
+};
+
+export const exportCategory = async (category: []) => {
+  try {
+    const categoryIdsArray = category.map(
+      (category: { id: string }) => category.id
+    );
+
+    const fetchedCategory = await prismadb.category.findMany({
+      where: {
+        id: {
+          in: categoryIdsArray,
+        },
+      },
+      include: {
+        products: true,
+      },
+    });
+
+    const flattenedCategory = fetchedCategory.map((category) =>
+      flattenJSON(category)
+    );
+
+    const filePath = path.join(process.cwd(), "public", "category.csv");
+    const ws = fs.createWriteStream(filePath);
+
+    return new Promise<string>((resolve, reject) => {
+      write(flattenedCategory, { headers: true })
+        .pipe(ws)
+        .on("finish", () => {
+          resolve("/category.csv");
+        })
+        .on("error", (err) => {
+          console.error(err);
+          reject(new Error("Error writing CSV file"));
+        });
+    });
+  } catch (error) {
+    console.error("Error exporting products:", error);
+    throw error;
+  }
+};
+
+export const exportBillboard = async (billboard: []) => {
+  try {
+    const billboardIdsArray = billboard.map(
+      (billboard: { id: string }) => billboard.id
+    );
+
+    const fetchedBillboard = await prismadb.billboard.findMany({
+      where: {
+        id: {
+          in: billboardIdsArray,
+        },
+      },
+    });
+
+    const flattenedBillboard = fetchedBillboard.map((billboard) =>
+      flattenJSON(billboard)
+    );
+
+    const filePath = path.join(process.cwd(), "public", "billboard.csv");
+    const ws = fs.createWriteStream(filePath);
+
+    return new Promise<string>((resolve, reject) => {
+      write(flattenedBillboard, { headers: true })
+        .pipe(ws)
+        .on("finish", () => {
+          resolve("/billboard.csv");
+        })
+        .on("error", (err) => {
+          console.error(err);
+          reject(new Error("Error writing CSV file"));
+        });
+    });
+  } catch (error) {
+    console.error("Error exporting products:", error);
+    throw error;
+  }
+};

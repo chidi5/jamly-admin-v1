@@ -30,7 +30,12 @@ const BillboardClient = ({ data }: BillboardClientProps) => {
         </Button>
       </div>
       <Separator />
-      <DataTable searchKey="label" columns={columns} data={data} />
+      <DataTable
+        searchKey="label"
+        columns={columns}
+        data={data}
+        type="billboard"
+      />
       <Heading title="API" description="API Calls for Billboards" />
       <Separator />
       <ApiList entityName="billboards" entityIdName="billboardId" />
