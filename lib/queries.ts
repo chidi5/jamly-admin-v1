@@ -2,13 +2,25 @@
 
 import { clerkClient, currentUser } from "@clerk/nextjs";
 import { Invitation, Role, Store, User } from "@prisma/client";
+import crypto from "crypto";
 import { write } from "fast-csv";
-import fs from "fs";
 import { redirect } from "next/navigation";
-import path from "path";
 import slugify from "slugify";
+import { Writable } from "stream";
 import prismadb from "./prismadb";
 import { ProductData } from "./types";
+
+const algorithm = "aes-256-cbc";
+
+if (!process.env.ENCRYPTION_KEY) {
+  throw new Error("ENCRYPTION_KEY environment variable is not set");
+}
+
+const key = crypto
+  .createHash("sha256")
+  .update(String(`${process.env.ENCRYPTION_KEY}`))
+  .digest("base64")
+  .slice(0, 32);
 
 function generateRandomString(length: any) {
   return crypto.randomUUID().toString().slice(0, length);
@@ -249,6 +261,16 @@ export const getNotification = async (storeId: string) => {
   } catch (error) {
     console.log(error);
   }
+};
+
+export const getPaymentConfig = async (storeId: string) => {
+  const paymentConfig = await prismadb.paymentConfig.findMany({
+    where: {
+      storeId,
+    },
+  });
+
+  return paymentConfig;
 };
 
 /*export const updateUser = async (data: {
@@ -666,141 +688,156 @@ const flattenJSON = (data: any) => {
   return result;
 };
 
-export const exportProduct = async (products: []) => {
-  try {
-    const productIdsArray = products.map(
-      (product: { id: string }) => product.id
-    );
+export const exportProduct = async (products: []): Promise<string> => {
+  const productIdsArray = products.map((product: { id: string }) => product.id);
 
-    const fetchedProducts = await prismadb.product.findMany({
-      where: {
-        id: {
-          in: productIdsArray,
-        },
+  const fetchedProducts = await prismadb.product.findMany({
+    where: {
+      id: {
+        in: productIdsArray,
       },
-      include: {
-        images: true,
-        priceData: true,
-        costAndProfitData: true,
-        discount: true,
-        stock: true,
-        categories: true,
-        additionalInfoSections: true,
-        options: true,
-        variants: {
-          include: {
-            priceData: true,
-            costAndProfitData: true,
-            stock: true,
-            selectedOptions: {
-              include: {
-                option: true,
-              },
+    },
+    include: {
+      images: true,
+      priceData: true,
+      costAndProfitData: true,
+      discount: true,
+      stock: true,
+      categories: true,
+      additionalInfoSections: true,
+      options: true,
+      variants: {
+        include: {
+          priceData: true,
+          costAndProfitData: true,
+          stock: true,
+          selectedOptions: {
+            include: {
+              option: true,
             },
           },
         },
       },
+    },
+  });
+
+  const flattenedProducts = fetchedProducts.map((product) =>
+    flattenJSON(product)
+  );
+
+  return new Promise((resolve, reject) => {
+    const chunks: string[] = [];
+
+    const writable = new Writable({
+      write(chunk, encoding, callback) {
+        chunks.push(chunk.toString());
+        callback();
+      },
     });
 
-    const flattenedProducts = fetchedProducts.map((product) =>
-      flattenJSON(product)
-    );
-
-    const filePath = path.join(process.cwd(), "public", "products.csv");
-    const ws = fs.createWriteStream(filePath);
-
-    return new Promise<string>((resolve, reject) => {
-      write(flattenedProducts, { headers: true })
-        .pipe(ws)
-        .on("finish", () => {
-          resolve("/products.csv");
-        })
-        .on("error", (err) => {
-          console.error(err);
-          reject(new Error("Error writing CSV file"));
-        });
-    });
-  } catch (error) {
-    console.error("Error exporting products:", error);
-    throw error;
-  }
+    write(flattenedProducts, { headers: true })
+      .on("error", reject)
+      .on("finish", () => {
+        resolve(chunks.join(""));
+      })
+      .pipe(writable);
+  });
 };
 
-export const exportCategory = async (category: []) => {
-  try {
-    const categoryIdsArray = category.map(
-      (category: { id: string }) => category.id
-    );
+export const exportCategory = async (category: []): Promise<string> => {
+  const categoryIdsArray = category.map(
+    (category: { id: string }) => category.id
+  );
 
-    const fetchedCategory = await prismadb.category.findMany({
-      where: {
-        id: {
-          in: categoryIdsArray,
-        },
+  const fetchedCategory = await prismadb.category.findMany({
+    where: {
+      id: {
+        in: categoryIdsArray,
       },
-      include: {
-        products: true,
+    },
+    include: {
+      products: true,
+    },
+  });
+
+  const flattenedCategory = fetchedCategory.map((category) =>
+    flattenJSON(category)
+  );
+
+  return new Promise((resolve, reject) => {
+    const chunks: string[] = [];
+
+    const writable = new Writable({
+      write(chunk, encoding, callback) {
+        chunks.push(chunk.toString());
+        callback();
       },
     });
 
-    const flattenedCategory = fetchedCategory.map((category) =>
-      flattenJSON(category)
-    );
-
-    const filePath = path.join(process.cwd(), "public", "category.csv");
-    const ws = fs.createWriteStream(filePath);
-
-    return new Promise<string>((resolve, reject) => {
-      write(flattenedCategory, { headers: true })
-        .pipe(ws)
-        .on("finish", () => {
-          resolve("/category.csv");
-        })
-        .on("error", (err) => {
-          console.error(err);
-          reject(new Error("Error writing CSV file"));
-        });
-    });
-  } catch (error) {
-    console.error("Error exporting products:", error);
-    throw error;
-  }
+    write(flattenedCategory, { headers: true })
+      .on("error", reject)
+      .on("finish", () => {
+        resolve(chunks.join(""));
+      })
+      .pipe(writable);
+  });
 };
 
-export const exportBillboard = async (billboard: []) => {
-  try {
-    const billboardIdsArray = billboard.map(
-      (billboard: { id: string }) => billboard.id
-    );
+export const exportBillboard = async (billboard: []): Promise<string> => {
+  const billboardIdsArray = billboard.map(
+    (billboard: { id: string }) => billboard.id
+  );
 
-    const fetchedBillboard = await prismadb.billboard.findMany({
-      where: {
-        id: {
-          in: billboardIdsArray,
-        },
+  const fetchedBillboard = await prismadb.billboard.findMany({
+    where: {
+      id: {
+        in: billboardIdsArray,
+      },
+    },
+  });
+
+  const flattenedBillboard = fetchedBillboard.map((billboard) =>
+    flattenJSON(billboard)
+  );
+
+  return new Promise((resolve, reject) => {
+    const chunks: string[] = [];
+
+    const writable = new Writable({
+      write(chunk, encoding, callback) {
+        chunks.push(chunk.toString());
+        callback();
       },
     });
 
-    const flattenedBillboard = fetchedBillboard.map((billboard) =>
-      flattenJSON(billboard)
-    );
+    write(flattenedBillboard, { headers: true })
+      .on("error", reject)
+      .on("finish", () => {
+        resolve(chunks.join(""));
+      })
+      .pipe(writable);
+  });
+};
 
-    const filePath = path.join(process.cwd(), "public", "billboard.csv");
-    const ws = fs.createWriteStream(filePath);
+export const encrypt = async (text: string) => {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return {
+    iv: iv.toString("hex"),
+    content: encrypted,
+  };
+};
 
-    return new Promise<string>((resolve, reject) => {
-      write(flattenedBillboard, { headers: true })
-        .pipe(ws)
-        .on("finish", () => {
-          resolve("/billboard.csv");
-        })
-        .on("error", (err) => {
-          console.error(err);
-          reject(new Error("Error writing CSV file"));
-        });
-    });
-  } catch (error) {
-    console.error("Error exporting products:", error);
-    throw error;
-  }
+export const decrypt = async (text: string) => {
+  const hash = JSON.parse(text);
+  const decipher = crypto.createDecipheriv(
+    algorithm,
+    key,
+    Buffer.from(hash.iv, "hex")
+  );
+  let decrypted = decipher.update(hash.content, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
 };

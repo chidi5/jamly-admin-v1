@@ -33,30 +33,30 @@ model User {
 }
 
 model Store {
-  id               String         @id @default(uuid())
-  connectAccountId String?        @default("")
-  customerId       String?        @default("")
-  name             String
-  storeLogo        String?        @db.Text
-  companyEmail     String?        @db.Text
-  companyPhone     String?
-  address          String?
-  city             String?
-  zipCode          String?
-  state            String?
-  country          String?
-  locale           String         @default("en-NG")
-  defaultCurrency  String
-  users            User[]
-  billboards       Billboard[]    @relation("StoreToBillboard")
-  categories       Category[]     @relation("StoreToCategory")
-  products         Product[]      @relation("StoreToProduct")
-  orders           Order[]        @relation("StoreToOrder")
-  Invitation       Invitation[]
-  Notification     Notification[]
-  Subscription     Subscription?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id              String          @id @default(uuid())
+  customerId      String?         @default("")
+  name            String
+  storeLogo       String?         @db.Text
+  companyEmail    String?         @db.Text
+  companyPhone    String?
+  address         String?
+  city            String?
+  zipCode         String?
+  state           String?
+  country         String?
+  locale          String          @default("en-NG")
+  defaultCurrency String
+  users           User[]
+  billboards      Billboard[]     @relation("StoreToBillboard")
+  categories      Category[]      @relation("StoreToCategory")
+  products        Product[]       @relation("StoreToProduct")
+  orders          Order[]         @relation("StoreToOrder")
+  Invitation      Invitation[]
+  Notification    Notification[]
+  Subscription    Subscription?
+  paymentConfigs  PaymentConfig[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model Billboard {
@@ -303,4 +303,17 @@ model Subscription {
   Store   Store?  @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
+}
+
+model PaymentConfig {
+  id        String  @id @default(uuid())
+  storeId   String
+  store     Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  provider  String
+  publicKey String
+  secretKey String
+  isActive  Boolean @default(false)
+
+  @@unique([storeId, provider])
+  @@index([storeId])
 }

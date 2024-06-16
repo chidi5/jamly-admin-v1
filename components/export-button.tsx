@@ -22,8 +22,9 @@ const ExportButton = ({ selectedRows, type }: ExportProps) => {
           filePath = await exportBillboard(selectedRows);
 
           if (filePath) {
+            const blob = new Blob([filePath], { type: "text/csv" });
             const link = document.createElement("a");
-            link.href = filePath;
+            link.href = URL.createObjectURL(blob);
             link.download = "billboard.csv";
             document.body.appendChild(link);
             link.click();
@@ -33,10 +34,10 @@ const ExportButton = ({ selectedRows, type }: ExportProps) => {
 
         case "category":
           filePath = await exportCategory(selectedRows);
-
           if (filePath) {
+            const blob = new Blob([filePath], { type: "text/csv" });
             const link = document.createElement("a");
-            link.href = filePath;
+            link.href = URL.createObjectURL(blob);
             link.download = "category.csv";
             document.body.appendChild(link);
             link.click();
@@ -46,10 +47,10 @@ const ExportButton = ({ selectedRows, type }: ExportProps) => {
 
         case "product":
           filePath = await exportProduct(selectedRows);
-
           if (filePath) {
+            const blob = new Blob([filePath], { type: "text/csv" });
             const link = document.createElement("a");
-            link.href = filePath;
+            link.href = URL.createObjectURL(blob);
             link.download = "products.csv";
             document.body.appendChild(link);
             link.click();

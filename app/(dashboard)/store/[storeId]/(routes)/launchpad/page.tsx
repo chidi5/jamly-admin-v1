@@ -9,6 +9,7 @@ type LaunchPadProps = {
 const LaunchPadPage = async ({ params }: LaunchPadProps) => {
   const store = await prismadb.store.findUnique({
     where: { id: params.storeId },
+    include: { paymentConfigs: true },
   });
 
   if (!store) redirect("/sign-in");

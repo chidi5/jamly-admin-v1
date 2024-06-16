@@ -23,6 +23,9 @@ const Paymentpage = async ({ params }: PaymentProps) => {
     where: {
       AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
     },
+    include: {
+      paymentConfigs: true,
+    },
   });
 
   if (!store) redirect("/store");
