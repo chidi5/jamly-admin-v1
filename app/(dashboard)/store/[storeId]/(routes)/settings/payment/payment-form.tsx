@@ -180,7 +180,8 @@ const PaymentForm = ({ store }: PaymentFormProps) => {
           ) : (
             <Link
               className={cn(buttonVariants({ variant: "outline" }))}
-              href={"#"}
+              onClick={() => handleConnect("Stripe")}
+              href={""}
             >
               Connect
             </Link>
