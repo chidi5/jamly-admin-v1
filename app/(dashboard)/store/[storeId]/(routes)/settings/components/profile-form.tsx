@@ -65,9 +65,8 @@ const ProfileForm = () => {
         lastName: user.lastName || "",
         image: user.image || "",
       });
-      console.log(user);
     }
-  }, [isLoaded, user, form]);
+  }, [form, isLoaded, user]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     startTransition(async () => {

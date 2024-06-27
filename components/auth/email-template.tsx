@@ -61,7 +61,7 @@ export const InvitationEmailTemplate: React.FC<
       </a>
     </button>
     <p>
-      If you're having trouble with the above button,
+      If you&apos;re having trouble with the above button,
       <a href={confirmLink} className="text-indigo-600">
         {" "}
         click here.

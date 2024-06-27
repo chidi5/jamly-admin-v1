@@ -385,6 +385,7 @@ const ProductForm = ({
   }, [
     form,
     initialData?.variants,
+    initialData?.priceData?.price,
     variantFields,
     removeVariant,
     appendVariant,
