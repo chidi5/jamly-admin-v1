@@ -64,6 +64,10 @@ const ProfileForm = () => {
     }
   }, [form, isLoaded, user]);
 
+  if (!isLoaded || !user) {
+    return null;
+  }
+
   const onSubmit = async (data: ProfileFormValues) => {
     startTransition(async () => {
       const newData = { ...data, userId: user.id };

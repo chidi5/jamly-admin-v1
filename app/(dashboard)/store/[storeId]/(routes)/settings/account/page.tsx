@@ -1,11 +1,9 @@
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
-import { getUser } from "@/lib/queries";
-import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import AccountSettingsForm from "./settings-form";
-import { currentUser } from "@/hooks/use-current-user";
 
 type SettingsProps = {
   params: { storeId: string };
