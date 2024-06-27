@@ -7,10 +7,15 @@ import { ReactNode } from "react";
 const layout = async ({ children }: { children: ReactNode }) => {
   const session = await currentUser();
 
-  const user = await getUserbyId(session?.id!);
+  if (!session) {
+    redirect("/sign-in");
+    return;
+  }
+
+  const user = await getUserbyId(session.id);
 
   if (!user) {
-    redirect("/sign-in");
+    return;
   }
 
   const storeId = await verifyAndAcceptInvitation();
