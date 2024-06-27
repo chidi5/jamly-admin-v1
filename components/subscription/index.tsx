@@ -4,12 +4,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { subscriptionCreate } from "@/lib/paystack/action";
 import { cn } from "@/lib/utils";
 import { useModal } from "@/providers/cutom-modal-provider";
-import { useUser } from "@clerk/nextjs";
 import { Plan } from "@prisma/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PaystackButton } from "react-paystack";
 import { buttonVariants } from "../ui/button";
+import { useUser } from "@/hooks/use-current-user";
 
 type Props = {
   selectedPlanId: string | Plan;
@@ -33,7 +33,7 @@ const SubscriptionForm = ({
 
   const config = {
     reference: new Date().getTime().toString(),
-    email: user?.emailAddresses[0].emailAddress!,
+    email: user?.email!,
     amount: price, //Amount is in the country's lowest currency. E.g Kobo, so 20000 kobo = N200
     plan: selectedPlanId,
     publicKey: publicKey,
