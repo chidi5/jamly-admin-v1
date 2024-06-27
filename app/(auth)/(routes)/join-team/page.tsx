@@ -1,5 +1,5 @@
-import { Suspense } from "react";
 import { ExistingUserInviteForm } from "@/components/auth/existing-user-invite-form";
+import { Suspense } from "react";
 
 const JoinTeamPage = () => {
   return (

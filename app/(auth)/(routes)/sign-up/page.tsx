@@ -1,8 +1,13 @@
 import { SignUpForm } from "@/components/auth/signUp-form";
-import React from "react";
+import { Suspense } from "react";
 
 const SignUpPage = () => {
-  return <SignUpForm />;
+  return (
+    <Suspense>
+      {" "}
+      <SignUpForm />
+    </Suspense>
+  );
 };
 
 export default SignUpPage;
