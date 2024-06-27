@@ -1,7 +1,6 @@
 import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 import { encrypt } from "@/lib/queries";
-import { auth } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
