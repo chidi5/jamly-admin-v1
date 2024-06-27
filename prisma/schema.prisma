@@ -77,7 +77,7 @@ model User {
   id                    String                 @id @default(cuid())
   firstName             String?
   lastName              String?
-  email                 String?                @unique
+  email                 String                 @unique
   emailVerified         DateTime?              @map("email_verified")
   image                 String?
   password              String?
