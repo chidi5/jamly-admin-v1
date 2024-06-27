@@ -54,10 +54,6 @@ const ProfileForm = () => {
     },
   });
 
-  if (!isLoaded || !user) {
-    return null;
-  }
-
   useEffect(() => {
     if (isLoaded && user) {
       form.reset({
