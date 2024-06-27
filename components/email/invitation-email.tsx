@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Body,
   Button,
@@ -16,6 +14,7 @@ import {
   Tailwind,
   Text,
 } from "@react-email/components";
+import * as React from "react";
 
 interface EmailTemplateProps {
   confirmLink: string;
