@@ -26,7 +26,8 @@ export const SignIn = async (data: z.infer<typeof SignInSchema>) => {
 
   const existingUser = await getUserbyEmail(email);
 
-  if (!existingUser || !existingUser.password) return null;
+  if (!existingUser || !existingUser.password)
+    return { error: "Invalid credentials!" };
 
   if (existingUser.isTwoFactorEnabled && existingUser.email) {
     if (code) {

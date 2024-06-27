@@ -47,6 +47,7 @@ export const SignInForm = () => {
   const onSubmit = async (data: UserFormData) => {
     setError("");
     setSuccess("");
+
     startTransition(async () => {
       const response = await SignIn(data);
       if (response?.error) {
