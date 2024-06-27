@@ -1,4 +1,8 @@
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -19,7 +23,7 @@ const nextConfig = {
       buildDependencies: {
         config: [__filename],
       },
-      cacheDirectory: path.resolve(process.cwd(), ".next/cache/webpack"),
+      cacheDirectory: path.resolve(__dirname, ".next/cache/webpack"),
       name: `cache-${buildId}`,
       store: "pack",
       compression: "gzip",
