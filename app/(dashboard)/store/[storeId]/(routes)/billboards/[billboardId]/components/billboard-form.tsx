@@ -24,7 +24,7 @@ import { Billboard } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -46,7 +46,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
   const origin = useOrigin();
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
 
   const title = initialData ? "Edit billboard" : "Create billboard";
   const description = initialData ? "Edit a billboard." : "Add a new billboard";
@@ -65,50 +65,53 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
   });
 
   const onSubmit = async (data: BillboardFormValues) => {
-    try {
-      setLoading(true);
-      if (initialData) {
-        await axios.patch(
-          `/api/${params.storeId}/billboards/${params.billboardId}`,
-          data
-        );
-      } else {
-        await axios.post(`/api/${params.storeId}/billboards`, data);
+    startTransition(async () => {
+      try {
+        if (initialData) {
+          await axios.patch(
+            `/api/${params.storeId}/billboards/${params.billboardId}`,
+            data
+          );
+        } else {
+          await axios.post(`/api/${params.storeId}/billboards`, data);
+        }
+        router.push(`/store/${params.storeId}/billboards`);
+        router.refresh();
+        toast({ description: toastMessage });
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "There was a problem with your request";
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong",
+          description: errorMessage,
+        });
       }
-      router.push(`/store/${params.storeId}/billboards`);
-      router.refresh();
-      toast({ description: toastMessage });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description: "There was a problem with your request",
-      });
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const onDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(
-        `/api/${params.storeId}/billboards/${params.billboardId}`
-      );
-      router.push(`/store/${params.storeId}/billboards`);
-      router.refresh();
-      toast({ description: "Billboard deleted." });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description:
-          "Make sure you removed all categories using the billboard first.",
-      });
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    startTransition(async () => {
+      try {
+        await axios.delete(
+          `/api/${params.storeId}/billboards/${params.billboardId}`
+        );
+        router.push(`/store/${params.storeId}/billboards`);
+        router.refresh();
+        toast({ description: "Billboard deleted." });
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "There was a problem with your request";
+        toast({
+          variant: "destructive",
+          description: errorMessage,
+        });
+      } finally {
+        setOpen(false);
+      }
+    });
   };
 
   return (
@@ -149,6 +152,7 @@ const BillboardForm = ({ initialData }: BillboardFormProps) => {
                   <ImageUpload
                     value={field.value ? [field.value] : []}
                     disabled={loading}
+                    hidden={true}
                     onChange={(url) => field.onChange(url)}
                     onRemove={() => field.onChange("")}
                   />

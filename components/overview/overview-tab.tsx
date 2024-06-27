@@ -8,13 +8,15 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Activity, CreditCard, DollarSign } from "lucide-react";
-import { getAuthUserDetails, priceFormatter } from "@/lib/queries";
+import { priceFormatter } from "@/lib/queries";
+import { getAuthUserDetails } from "@/lib/queries/user";
 
 type OverviewTabProps = {
   data: string;
   totalRevenue: { currentMonthTotalRevenue: number; percentageChange: number };
   sales: { currentMonthSalesCount: number; percentageChange: number };
   stock: number;
+  storeId: string;
 };
 
 const OverviewTab = async ({
@@ -22,14 +24,20 @@ const OverviewTab = async ({
   totalRevenue,
   sales,
   stock,
+  storeId,
 }: OverviewTabProps) => {
   const user = await getAuthUserDetails();
+
   if (!user) return null;
 
+  const selectedStore = user.stores.find((store) => store.id === storeId);
+  if (!selectedStore) return null;
+
   const formatter = await priceFormatter(
-    user.Store!.locale,
-    user.Store!.defaultCurrency
+    selectedStore.locale,
+    selectedStore.defaultCurrency
   );
+
   return (
     <TabsContent value={data} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

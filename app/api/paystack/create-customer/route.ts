@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { email, first_name, last_name, phone } = await req.json();
 
-  if (!email || !first_name || !last_name || !phone)
+  if (!email || !first_name || !last_name)
     return new NextResponse("Missing data", {
       status: 400,
     });
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       email,
       first_name,
       last_name,
-      phone,
+      phone: phone || null,
     });
     return Response.json({ customerId: customer.data?.customer_code });
   } catch (error) {

@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 import {
   createOptionsAndValues,
@@ -14,15 +14,20 @@ export async function POST(
   { params }: { params: { storeId: string } }
 ) {
   try {
-    const { userId } = auth();
-    if (!userId) return new NextResponse("Unauthenticated", { status: 403 });
+    const user = await currentUser();
+
+    if (!user)
+      return new NextResponse(JSON.stringify({ message: "Unauthenticated" }), {
+        status: 403,
+      });
 
     const body = await request.json();
     await validateProductData(body);
 
     const handle = await generateUniqueProductHandle(body.name);
 
-    if (!params.storeId) throw new Error("Store id is required");
+    if (!params.storeId)
+      throw new Error(JSON.stringify({ message: "Store id is required" }));
 
     // Fetch the store's default currency
     const store = await prismadb.store.findUnique({
@@ -31,10 +36,12 @@ export async function POST(
     });
 
     if (!store) {
-      return new NextResponse("Store not found", { status: 404 });
+      return new NextResponse(JSON.stringify({ message: "Store not found" }), {
+        status: 404,
+      });
     }
 
-    await getStoreByUserId(params.storeId, userId);
+    await getStoreByUserId(params.storeId, user.id);
 
     const product = await prismadb.product.create({
       data: {
@@ -118,7 +125,11 @@ export async function POST(
                 (data) => data!.value === value
               );
               if (!matchingOptionValue)
-                throw new Error(`Option value "${value}" not found`);
+                throw new Error(
+                  JSON.stringify({
+                    message: `Option value "${value}" not found`,
+                  })
+                );
               return { id: matchingOptionValue.id };
             })
           : [
@@ -185,7 +196,9 @@ export async function POST(
     return NextResponse.json(product);
   } catch (error: any) {
     console.error("[PRODUCTS_POST]", error);
-    return new NextResponse(error.message || "Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -199,7 +212,10 @@ export async function GET(
     const isFeatured = searchParams.get("isFeatured");
 
     if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Store id is required" }),
+        { status: 400 }
+      );
     }
 
     const products = await prismadb.product.findMany({
@@ -251,6 +267,8 @@ export async function GET(
     return NextResponse.json(products);
   } catch (error) {
     console.log("[PRODUCTS_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }

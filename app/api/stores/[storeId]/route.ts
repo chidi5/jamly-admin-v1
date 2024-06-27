@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
 
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 
 export async function GET(
@@ -9,7 +9,10 @@ export async function GET(
 ) {
   try {
     if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Store id is required" }),
+        { status: 400 }
+      );
     }
 
     const store = await prismadb.store.findFirst({
@@ -18,13 +21,23 @@ export async function GET(
       },
       include: {
         billboards: true,
+        paymentConfigs: {
+          select: {
+            id: true,
+            provider: true,
+            publicKey: true,
+            isActive: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(store);
   } catch (error) {
     console.log("[STORE_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -33,7 +46,8 @@ export async function PATCH(
   { params }: { params: { storeId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
+
     const body = await request.json();
 
     const {
@@ -48,8 +62,10 @@ export async function PATCH(
       country,
     } = body;
 
-    if (!userId) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+    if (!user) {
+      return new NextResponse(JSON.stringify({ message: "Unauthenticated" }), {
+        status: 403,
+      });
     }
 
     if (
@@ -59,17 +75,22 @@ export async function PATCH(
       !address ||
       !city ||
       !zipCode ||
-      !state ||
-      !country
+      !state
     ) {
       return new NextResponse(
-        "Name | companyEmail | companyPhone | address | city | state | zip code | country is required",
+        JSON.stringify({
+          message:
+            "Name | companyEmail | companyPhone | address | city | state | zip code is required",
+        }),
         { status: 400 }
       );
     }
 
     if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Store id is required" }),
+        { status: 400 }
+      );
     }
 
     const store = await prismadb.store.updateMany({
@@ -92,7 +113,9 @@ export async function PATCH(
     return NextResponse.json(store);
   } catch (error) {
     console.log("[STORE_PATCH]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -101,14 +124,20 @@ export async function DELETE(
   { params }: { params: { storeId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
 
-    if (!userId) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+    if (!user) {
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthenticated user!" }),
+        { status: 403 }
+      );
     }
 
     if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Store id is required" }),
+        { status: 400 }
+      );
     }
 
     const store = await prismadb.store.deleteMany({
@@ -120,6 +149,8 @@ export async function DELETE(
     return NextResponse.json(store);
   } catch (error) {
     console.log("[STORE_DELETE]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }

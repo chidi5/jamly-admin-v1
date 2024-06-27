@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
-import { getAuthUserDetails } from "@/lib/queries";
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +9,10 @@ export async function GET(
 ) {
   try {
     if (!params.billboardId) {
-      return new NextResponse("Billboard id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Billboard id is required" }),
+        { status: 400 }
+      );
     }
 
     const billboard = await prismadb.billboard.findUnique({
@@ -21,7 +24,9 @@ export async function GET(
     return NextResponse.json(billboard);
   } catch (error) {
     console.log("[BILLBOARD_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -30,14 +35,20 @@ export async function DELETE(
   { params }: { params: { billboardId: string; storeId: string } }
 ) {
   try {
-    const user = await getAuthUserDetails();
+    const user = await currentUser();
 
     if (!user) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthenticated user" }),
+        { status: 403 }
+      );
     }
 
     if (!params.billboardId) {
-      return new NextResponse("Billboard id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Billboard id is required" }),
+        { status: 400 }
+      );
     }
 
     const storeByUserId = await prismadb.store.findFirst({
@@ -47,7 +58,10 @@ export async function DELETE(
     });
 
     if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 405 });
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthorized access!" }),
+        { status: 405 }
+      );
     }
 
     const billboard = await prismadb.billboard.delete({
@@ -59,7 +73,9 @@ export async function DELETE(
     return NextResponse.json(billboard);
   } catch (error) {
     console.log("[BILLBOARD_DELETE]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -68,26 +84,37 @@ export async function PATCH(
   { params }: { params: { billboardId: string; storeId: string } }
 ) {
   try {
-    const user = await getAuthUserDetails();
+    const user = await currentUser();
 
     const body = await request.json();
 
     const { label, isBanner, imageUrl } = body;
 
     if (!user) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+      return new NextResponse(JSON.stringify({ message: "Unauthenticated" }), {
+        status: 403,
+      });
     }
 
     if (!label) {
-      return new NextResponse("Label is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Label is required" }),
+        { status: 400 }
+      );
     }
 
     if (!imageUrl) {
-      return new NextResponse("Image URL is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Image URL is required" }),
+        { status: 400 }
+      );
     }
 
     if (!params.billboardId) {
-      return new NextResponse("Billboard id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Billboard id is required" }),
+        { status: 400 }
+      );
     }
 
     const storeByUserId = await prismadb.store.findFirst({
@@ -97,7 +124,10 @@ export async function PATCH(
     });
 
     if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 405 });
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthorized access!" }),
+        { status: 405 }
+      );
     }
 
     const billboard = await prismadb.billboard.update({
@@ -114,6 +144,8 @@ export async function PATCH(
     return NextResponse.json(billboard);
   } catch (error) {
     console.log("[BILLBOARD_PATCH]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }

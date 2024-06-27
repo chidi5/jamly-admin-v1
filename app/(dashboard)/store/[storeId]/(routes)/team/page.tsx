@@ -9,8 +9,10 @@ type TeamProps = {
 const TeamPage = async ({ params }: TeamProps) => {
   const team = await prismadb.user.findMany({
     where: {
-      Store: {
-        id: params.storeId,
+      stores: {
+        some: {
+          id: params.storeId,
+        },
       },
     },
   });
@@ -25,9 +27,9 @@ const TeamPage = async ({ params }: TeamProps) => {
 
   const formattedTeam: TeamColumn[] = team.map((item) => ({
     id: item.id,
-    name: item.name,
+    name: `${item.firstName} ${item.lastName}`,
     email: item.email,
-    avatarUrl: item.avatarUrl,
+    image: item.image,
     role: item.role,
   }));
 

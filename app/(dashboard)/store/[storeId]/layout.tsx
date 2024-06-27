@@ -1,9 +1,9 @@
 import Navbar from "@/components/Navbar";
 import WidthWrapper from "@/components/WidthWrapper";
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 import CustomModalProvider from "@/providers/cutom-modal-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 

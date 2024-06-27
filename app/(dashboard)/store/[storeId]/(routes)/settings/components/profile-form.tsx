@@ -2,10 +2,8 @@
 
 import { useForm } from "react-hook-form";
 
-import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import Spinner from "@/components/Spinner";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -16,13 +14,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import ImageUpload from "@/components/ui/image-upload";
-import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import Spinner from "@/components/Spinner";
-import { Button } from "@/components/ui/button";
-import { updateUser } from "@/lib/queries";
-import { User } from "@prisma/client";
 import { toast } from "@/components/ui/use-toast";
+import { useUser } from "@/hooks/use-current-user";
+import { updateUser } from "@/lib/queries/user";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useEffect, useTransition } from "react";
+import { z } from "zod";
 
 const formSchema = z.object({
   firstName: z
@@ -35,66 +34,64 @@ const formSchema = z.object({
       required_error: "Last name is required.",
     })
     .min(1),
-  imageUrl: z
-    .string({
-      required_error: "Please enter a valid Image.",
-    })
-    .min(1),
+  image: z.optional(z.string()),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
 
 const ProfileForm = () => {
   const router = useRouter();
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { user, isLoaded } = useUser();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
-      imageUrl: "",
+      image: "",
     },
   });
 
+  if (!isLoaded || !user) {
+    return null;
+  }
+
   useEffect(() => {
-    if (isLoaded && isSignedIn && user) {
+    if (isLoaded && user) {
       form.reset({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
-        imageUrl: user.imageUrl || "",
+        image: user.image || "",
       });
+      console.log(user);
     }
-  }, [isLoaded, isSignedIn, user, form]);
+  }, [isLoaded, user, form]);
 
   const onSubmit = async (data: ProfileFormValues) => {
-    setLoading(true);
-    try {
-      await updateUser(data);
-      toast({ description: "Profile updated successfully" });
-    } catch (error) {
-      toast({
-        title: "Ooh Something went wrong",
-        description: `Error updating profile: ${error}`,
-      });
-      console.error("Error updating profile:", error);
-    } finally {
-      setLoading(false);
-    }
+    startTransition(async () => {
+      const newData = { ...data, userId: user.id };
+      const response = await updateUser(newData);
+      if (response.success) {
+        toast({ description: response.success });
+        router.refresh();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Ooh Something went wrong",
+          description: response.error,
+        });
+      }
+    });
   };
-
-  if (!isLoaded || !isSignedIn) {
-    return null;
-  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
         <FormField
           control={form.control}
-          name="imageUrl"
+          name="image"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Profile Image</FormLabel>
@@ -102,6 +99,7 @@ const ProfileForm = () => {
                 <ImageUpload
                   value={field.value ? [field.value] : []}
                   disabled={loading}
+                  className="object-contain"
                   onChange={(url) => field.onChange(url)}
                   onRemove={() => field.onChange("")}
                 />

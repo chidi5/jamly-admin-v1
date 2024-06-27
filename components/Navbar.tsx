@@ -1,22 +1,22 @@
-import React from "react";
-import WidthWrapper from "@/components/WidthWrapper";
-import { UserButton, auth } from "@clerk/nextjs";
 import { NavItem } from "@/components/NavItem";
+import WidthWrapper from "@/components/WidthWrapper";
 import StoreSwitcher from "@/components/store-switcher";
-import { redirect } from "next/navigation";
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
+import { redirect } from "next/navigation";
+import { UserButton } from "./auth/user-button";
 import { ModeToggle } from "./theme-toggle";
 
 const Navbar = async () => {
-  const { userId } = auth();
+  const user = await currentUser();
 
-  if (!userId) {
+  if (!user) {
     redirect("/sign-in");
   }
 
   const stores = await prismadb.store.findMany({
     where: {
-      AND: [{ users: { some: { id: userId } } }],
+      AND: [{ users: { some: { id: user.id } } }],
     },
   });
 
@@ -29,7 +29,7 @@ const Navbar = async () => {
             <NavItem className="mx-6" />
             <div className="ml-auto flex items-center space-x-4">
               <ModeToggle />
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
           </div>
         </WidthWrapper>

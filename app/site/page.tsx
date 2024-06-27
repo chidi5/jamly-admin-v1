@@ -1,5 +1,5 @@
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,26 +13,32 @@ import { Award } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const HomePage = async () => {
+const HomePage = () => {
   return (
     <>
-      <section className="py-48 relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
-        <div className="flex flex-col text-center items-center w-full gap-2 lg:pt-32 max-w-screen-lg px-2.5 sm:px-0">
-          <h1 className="text-3xl md:text-6xl font-medium">
-            <span className="block text-base sm:text-2xl">
-              From Click to Cart —
-            </span>
-            <span>Accelerate Your E-Commerce Journey Effortlessly.</span>
+      <section className="pt-[33vw] pb-[38vw] lg:pt-[15vw] lg:pb-[6vw] relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
+        <div className="flex flex-col text-left md:text-center items-start md:items-center space-y-8 max-w-screen-lg lg:max-w-full px-2.5 sm:px-0 ml-6">
+          <h1 className="text-2xl sm:text-2xl">From Click to Cart —</h1>
+          <h1 className="text-5xl lg:text-7xl leading-[3.5rem] font-normal">
+            Accelerate Your <br className="md:hidden" /> E-Commerce Journey
+            Effortlessly.
           </h1>
-          <p className="text-muted-foreground my-3 text-lg sm:mt-5 lg:mb-0 lg:text-xl">
-            Jamly is your express lane to online success.
+          <p className="my-3 text-xl sm:mt-5 lg:mb-0 lg:text-2xl">
+            Your express lane to online success.
             <br className="hidden md:block" />
             Set up your store swiftly, manage products effortlessly, and scale
             with confidence.
           </p>
+          <Button
+            size="lg"
+            className="rounded-full py-7 text-lg font-normal"
+            asChild
+          >
+            <Link href="/store">Create your store</Link>
+          </Button>
         </div>
       </section>
-      <section className="bg-[#f3f4f6] py-24 md:py-40">
+      <section className="py-24 md:py-40">
         <MaxWidthWrapper>
           <div className="flex flex-col gap-3">
             <div className="flex text-muted-foreground">

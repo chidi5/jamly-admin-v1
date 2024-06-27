@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
 
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 
 export async function GET(
@@ -9,7 +9,10 @@ export async function GET(
 ) {
   try {
     if (!params.categoryId) {
-      return new NextResponse("Category id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Category id is required" }),
+        { status: 400 }
+      );
     }
 
     const category = await prismadb.category.findFirst({
@@ -27,7 +30,9 @@ export async function GET(
     return NextResponse.json(category);
   } catch (error) {
     console.log("[CATEGORY_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -36,24 +41,32 @@ export async function DELETE(
   { params }: { params: { categoryId: string; storeId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
 
-    if (!userId) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+    if (!user) {
+      return new NextResponse(JSON.stringify({ message: "Unauthenticated" }), {
+        status: 403,
+      });
     }
 
     if (!params.categoryId) {
-      return new NextResponse("Category id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Category id is required" }),
+        { status: 400 }
+      );
     }
 
     const storeByUserId = await prismadb.store.findFirst({
       where: {
-        AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
+        AND: [{ id: params.storeId }, { users: { some: { id: user.id } } }],
       },
     });
 
     if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 405 });
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthorized access!" }),
+        { status: 405 }
+      );
     }
 
     const category = await prismadb.category.delete({
@@ -65,7 +78,9 @@ export async function DELETE(
     return NextResponse.json(category);
   } catch (error) {
     console.log("[CATEGORY_DELETE]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }
 
@@ -74,31 +89,44 @@ export async function PATCH(
   { params }: { params: { categoryId: string; storeId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
 
     const body = await request.json();
+
     const { name, imageUrl, products, isFeatured } = body;
 
-    if (!userId) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+    if (!user) {
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthenticated user!" }),
+        { status: 403 }
+      );
     }
 
     if (!name) {
-      return new NextResponse("Label is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Label is required" }),
+        { status: 400 }
+      );
     }
 
     if (!params.categoryId) {
-      return new NextResponse("Category ID is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Category ID is required" }),
+        { status: 400 }
+      );
     }
 
     const storeByUserId = await prismadb.store.findFirst({
       where: {
-        AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
+        AND: [{ id: params.storeId }, { users: { some: { id: user.id } } }],
       },
     });
 
     if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 405 });
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthorized access!" }),
+        { status: 405 }
+      );
     }
 
     const category = await prismadb.category.update({
@@ -118,6 +146,8 @@ export async function PATCH(
     return NextResponse.json(category);
   } catch (error) {
     console.log("[CATEGORY_PATCH]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
+      status: 500,
+    });
   }
 }

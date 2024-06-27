@@ -10,8 +10,8 @@ import Image from "next/image";
 export type TeamColumn = {
   id: string;
   name: string;
-  email: string;
-  avatarUrl: string;
+  email: string | null;
+  image: string | null;
   role: string;
 };
 
@@ -20,12 +20,12 @@ export const columns: ColumnDef<TeamColumn>[] = [
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => {
-      const avatarUrl = row.getValue("avatarUrl") as string;
+      const image = row.getValue("image") as string;
       return (
         <div className="flex items-center gap-4">
           <div className="h-11 w-11 relative flex-none">
             <Image
-              src={avatarUrl}
+              src={image || "/avatar.png"}
               fill
               className="rounded-full object-cover"
               alt="avatar image"
@@ -37,7 +37,7 @@ export const columns: ColumnDef<TeamColumn>[] = [
     },
   },
   {
-    accessorKey: "avatarUrl",
+    accessorKey: "image",
     header: "",
     cell: () => {
       return null;

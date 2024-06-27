@@ -1,10 +1,6 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import { useParams, useRouter } from "next/navigation";
-import { PaymentConfig, Store } from "@prisma/client";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,9 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { PaymentConfig, Store } from "@prisma/client";
 import { CheckCircleIcon, Dot } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 type StoreWithPaymentConfigs = Store & {
   paymentConfigs: PaymentConfig[];
@@ -26,9 +25,6 @@ type LaunchPadClientProps = {
 };
 
 const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
-  const params = useParams();
-  const router = useRouter();
-
   const allDetailsExist =
     store.address &&
     store.address &&

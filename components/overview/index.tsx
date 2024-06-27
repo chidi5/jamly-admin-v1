@@ -25,6 +25,7 @@ const Overview = async ({ storeId }: { storeId: string }) => {
         totalRevenue={totalRevenue}
         sales={sales}
         stock={stock}
+        storeId={storeId}
       />
     </Tabs>
   );

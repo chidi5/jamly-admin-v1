@@ -43,12 +43,15 @@ const CategoryModalForm = () => {
       await axios.post(`/api/${params.storeId}/categories`, data);
       router.refresh();
       setClose();
-      toast({ description: "Category created." });
+      toast({ description: "Category created!" });
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "There was a problem with your request";
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong",
-        description: error.message || "There was a problem with your request",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);

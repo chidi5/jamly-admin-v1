@@ -3,6 +3,7 @@
 import Spinner from "@/components/Spinner";
 import { AdditionalInfoModal } from "@/components/modals/additional-info-modal";
 import { AlertModal } from "@/components/modals/alert-modal";
+import { CustomModal } from "@/components/modals/custom-modal";
 import { OptionModal } from "@/components/modals/option-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,20 +28,25 @@ import { Heading } from "@/components/ui/heading";
 import ImageUpload from "@/components/ui/image-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
 import { useOrigin } from "@/hooks/use-origin";
 import {
   AdditionalInfoSchema,
-  CostAndProfitDataSchema,
-  discountSchema,
   optionSchema,
   productFormSchema,
-  stockSchema,
-  variantSchema,
 } from "@/lib/schema";
 import { cn } from "@/lib/utils";
+import { useModal } from "@/providers/cutom-modal-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AdditionalInfoSection,
@@ -57,25 +63,21 @@ import axios from "axios";
 import "easymde/dist/easymde.min.css";
 import { Plus, Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { Fragment, useCallback, useEffect, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import Markdown from "react-markdown";
 import SimpleMDE from "react-simplemde-editor";
 import { z } from "zod";
+import CategoryModalForm from "./category-modal-form";
 import InventoryStatusSelect, {
   inventoryStatusOptions,
 } from "./inventory-status-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CustomModal } from "@/components/modals/custom-modal";
-import CategoryModalForm from "./category-modal-form";
-import { useModal } from "@/providers/cutom-modal-provider";
 
 interface Variant {
   id: string;
@@ -123,7 +125,7 @@ const ProductForm = ({
   ];
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<z.infer<
@@ -271,6 +273,10 @@ const ProductForm = ({
     control: form.control,
     name: "discount.type",
   });
+  const trackInventory = useWatch({
+    control: form.control,
+    name: "stock.trackInventory",
+  });
 
   useEffect(() => {
     let salePrice = price;
@@ -315,6 +321,12 @@ const ProductForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHidden, initialData]);
+
+  useEffect(() => {
+    if (!trackInventory) {
+      form.setValue("stock.quantity", undefined);
+    }
+  }, [trackInventory, form]);
 
   const generateVariantTitles = (options: any[]) => {
     let titles: string[] = [];
@@ -426,48 +438,61 @@ const ProductForm = ({
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    try {
-      setLoading(true);
-      if (initialData) {
-        await axios.patch(
-          `/api/${params.storeId}/products/${params.productId}`,
-          data
-        );
-      } else {
-        console.log(data);
-        await axios.post(`/api/${params.storeId}/products`, data);
+    startTransition(async () => {
+      try {
+        if (initialData) {
+          await axios.patch(
+            `/api/${params.storeId}/products/${params.productId}`,
+            data
+          );
+        } else {
+          console.log(data);
+          await axios.post(`/api/${params.storeId}/products`, data);
+        }
+
+        router.push(`/store/${params.storeId}/products`);
+        router.refresh();
+
+        toast({ description: toastMessage });
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "There was a problem with your request";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong",
+          description: errorMessage,
+        });
       }
-      router.push(`/store/${params.storeId}/products`);
-      router.refresh();
-      toast({ description: toastMessage });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description: error.message || "There was a problem with your request",
-      });
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const onDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
-      router.push(`/store/${params.storeId}/products`);
-      router.refresh();
-      toast({ description: "Product deleted." });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description: "There was a problem with your request",
-      });
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    startTransition(async () => {
+      try {
+        await axios.delete(
+          `/api/${params.storeId}/products/${params.productId}`
+        );
+
+        router.push(`/store/${params.storeId}/products`);
+        router.refresh();
+
+        toast({ description: "Product deleted." });
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "There was a problem with your request";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong",
+          description: errorMessage,
+        });
+      } finally {
+        setOpen(false);
+      }
+    });
   };
 
   return (
@@ -541,6 +566,7 @@ const ProductForm = ({
                           <ImageUpload
                             value={field.value.map((image) => image.url)}
                             disabled={loading}
+                            hidden={true}
                             onChange={(url) =>
                               field.onChange([...field.value, { url }])
                             }

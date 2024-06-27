@@ -3,35 +3,41 @@
 import { AlertModal } from "@/components/modals/alert-modal";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { useUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
-import { User } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 
 type StoreDeleteProps = {
-  user: User;
   className: string;
   params: { storeId: string };
 };
 
-const StoreDelete = ({ user, className, params }: StoreDeleteProps) => {
+const StoreDelete = ({ className, params }: StoreDeleteProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const { user } = useUser();
+
+  if (!user) redirect("/sign-in");
 
   const onDelete = async () => {
     try {
       setLoading(true);
       await axios.delete(`/api/stores/${params.storeId}`);
-      router.push("/");
+      router.push("/store");
       toast({ description: "Store deleted." });
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "There was a problem with your request";
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong",
-        description: "Make sure you removed all products and categories first.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);

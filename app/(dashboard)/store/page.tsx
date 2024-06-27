@@ -1,4 +1,5 @@
-import { getAuthUserDetails, verifyAndAcceptInvitation } from "@/lib/queries";
+import { verifyAndAcceptInvitation } from "@/lib/queries/invitation";
+import { getAuthUserDetails } from "@/lib/queries/user";
 import { Plan } from "@prisma/client";
 import { redirect } from "next/navigation";
 
@@ -8,6 +9,10 @@ const LandingPage = async ({
   searchParams: { plan: Plan; state: string; code: string };
 }) => {
   const user = await getAuthUserDetails();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
 
   const storeId = await verifyAndAcceptInvitation();
 
@@ -23,7 +28,14 @@ const LandingPage = async ({
         return redirect(
           `/store/${stateStoreId}/${statePath}?code=${searchParams.code}`
         );
-      } else return redirect(`/store/${storeId}`);
+      } else {
+        return redirect(`/store/${storeId}`);
+      }
+    } else {
+      // Handle non-store owners (users, admins, etc.)
+      if (user.role === "STAFF_USER") {
+        return redirect(`/store/${storeId}`);
+      }
     }
   } else {
     if (searchParams.plan) {

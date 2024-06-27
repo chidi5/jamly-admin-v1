@@ -1,8 +1,9 @@
 import prismadb from "@/lib/prismadb";
-import { getAuthUserDetails, priceFormatter } from "@/lib/queries";
+import { priceFormatter } from "@/lib/queries";
 import { format } from "date-fns";
 import ProductClient from "./components/client";
 import { ProductColumn } from "./components/columns";
+import { getAuthUserDetails } from "@/lib/queries/user";
 
 type ProductProps = {
   params: { storeId: string };
@@ -10,6 +11,7 @@ type ProductProps = {
 
 const ProductPage = async ({ params }: ProductProps) => {
   const user = await getAuthUserDetails();
+
   if (!user) return null;
 
   const formatter = await priceFormatter(

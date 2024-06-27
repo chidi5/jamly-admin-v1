@@ -5,21 +5,20 @@ import { getUser } from "@/lib/queries";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import AccountSettingsForm from "./settings-form";
+import { currentUser } from "@/hooks/use-current-user";
 
 type SettingsProps = {
   params: { storeId: string };
 };
 
 const AccountsPage = async ({ params }: SettingsProps) => {
-  const { userId } = auth();
-  if (!userId) redirect("/sign-in");
+  const user = await currentUser();
 
-  const user = await getUser(userId);
   if (!user) redirect("/sign-in");
 
   const store = await prismadb.store.findFirst({
     where: {
-      AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
+      AND: [{ id: params.storeId }, { users: { some: { id: user.id } } }],
     },
   });
 
@@ -33,7 +32,7 @@ const AccountsPage = async ({ params }: SettingsProps) => {
         className="!text-2xl font-medium"
       />
       <Separator />
-      <AccountSettingsForm initialData={store} user={user} />
+      <AccountSettingsForm initialData={store} />
     </div>
   );
 };

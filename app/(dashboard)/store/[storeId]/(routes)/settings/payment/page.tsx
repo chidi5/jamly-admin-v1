@@ -1,27 +1,23 @@
+import PaymentForm from "@/app/(dashboard)/store/[storeId]/(routes)/settings/payment/payment-form";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
-import { getUser } from "@/lib/queries";
-import { auth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
-import React from "react";
-import PaymentForm from "@/app/(dashboard)/store/[storeId]/(routes)/settings/payment/payment-form";
 import { Dot } from "lucide-react";
+import { redirect } from "next/navigation";
 
 type PaymentProps = {
   params: { storeId: string };
 };
 
 const Paymentpage = async ({ params }: PaymentProps) => {
-  const { userId } = auth();
-  if (!userId) redirect("/sign-in");
+  const user = await currentUser();
 
-  const user = await getUser(userId);
   if (!user) redirect("/sign-in");
 
   const store = await prismadb.store.findFirst({
     where: {
-      AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
+      AND: [{ id: params.storeId }, { users: { some: { id: user.id } } }],
     },
     include: {
       paymentConfigs: true,

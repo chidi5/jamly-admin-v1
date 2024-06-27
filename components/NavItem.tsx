@@ -21,6 +21,11 @@ export function NavItem({
       active: pathname === `/store/${params.storeId}`,
     },
     {
+      href: `/store/${params.storeId}/onboard`,
+      label: "Setup",
+      active: pathname === `/store/${params.storeId}/onboard`,
+    },
+    {
       href: `/store/${params.storeId}/billboards`,
       label: "Billboards",
       active: pathname === `/store/${params.storeId}/billboards`,
@@ -44,11 +49,6 @@ export function NavItem({
       href: `/store/${params.storeId}/team`,
       label: "Team",
       active: pathname === `/store/${params.storeId}/team`,
-    },
-    {
-      href: `/store/${params.storeId}/launchpad`,
-      label: "Launch Pad",
-      active: pathname === `/store/${params.storeId}/launchpad`,
     },
     {
       href: `/store/${params.storeId}/billing`,

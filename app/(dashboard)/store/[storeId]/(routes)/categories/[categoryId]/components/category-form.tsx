@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
 import { useOrigin } from "@/hooks/use-origin";
+import { Product } from "@/lib/types";
 import { useModal } from "@/providers/cutom-modal-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Category } from "@prisma/client";
@@ -28,11 +29,10 @@ import axios from "axios";
 import { PlusIcon, Trash } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ProductSelectForm from "./product-select-form";
-import { Product } from "@/lib/types";
 
 type CategoryFormProps = {
   initialData:
@@ -64,7 +64,7 @@ const CategoryForm = ({
   const { setOpen: setModalOpen } = useModal();
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, startTransition] = useTransition();
 
   const title = initialData ? "Edit category" : "Create category";
   const description = initialData ? "Edit a category." : "Add a new category";
@@ -98,51 +98,60 @@ const CategoryForm = ({
   };
 
   const onSubmit = async (data: CategoryFormValues) => {
-    try {
-      setLoading(true);
-      if (initialData) {
-        await axios.patch(
-          `/api/${params.storeId}/categories/${params.categoryId}`,
-          data
-        );
-      } else {
-        await axios.post(`/api/${params.storeId}/categories`, data);
-        //console.log(data);
+    startTransition(async () => {
+      try {
+        if (initialData) {
+          await axios.patch(
+            `/api/${params.storeId}/categories/${params.categoryId}`,
+            data
+          );
+        } else {
+          await axios.post(`/api/${params.storeId}/categories`, data);
+        }
+
+        router.push(`/store/${params.storeId}/categories`);
+        router.refresh();
+
+        toast({ description: toastMessage });
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "There was a problem with your request";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong",
+          description: errorMessage,
+        });
       }
-      router.push(`/store/${params.storeId}/categories`);
-      router.refresh();
-      toast({ description: toastMessage });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description: error.message || "There was a problem with your request",
-      });
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const onDelete = async () => {
-    try {
-      setLoading(true);
-      await axios.delete(
-        `/api/${params.storeId}/categories/${params.categoryId}`
-      );
-      router.push(`/store/${params.storeId}/categories`);
-      router.refresh();
-      toast({ description: "Category deleted." });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong",
-        description:
-          "Make sure you removed all products using this category first.",
-      });
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    startTransition(async () => {
+      try {
+        await axios.delete(
+          `/api/${params.storeId}/categories/${params.categoryId}`
+        );
+
+        router.push(`/store/${params.storeId}/categories`);
+        router.refresh();
+
+        toast({ description: "Category deleted." });
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "There was a problem with your request";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong",
+          description: errorMessage,
+        });
+      } finally {
+        setOpen(false);
+      }
+    });
   };
 
   return (

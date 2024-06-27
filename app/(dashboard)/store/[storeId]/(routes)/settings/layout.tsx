@@ -1,12 +1,11 @@
-import { Metadata } from "next";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
+import { currentUser } from "@/hooks/use-current-user";
+import prismadb from "@/lib/prismadb";
+import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { SidebarNav } from "./components/sidebar-nav";
 import StoreDelete from "./components/store-delete";
-import { auth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
-import { getUser } from "@/lib/queries";
-import prismadb from "@/lib/prismadb";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -22,15 +21,13 @@ export default async function SettingsLayout({
   children,
   params,
 }: SettingsLayoutProps) {
-  const { userId } = auth();
-  if (!userId) redirect("/sign-in");
+  const user = await currentUser();
 
-  const user = await getUser(userId);
   if (!user) redirect("/sign-in");
 
   const store = await prismadb.store.findFirst({
     where: {
-      AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
+      AND: [{ id: params.storeId }, { users: { some: { id: user.id } } }],
     },
   });
 
@@ -59,7 +56,7 @@ export default async function SettingsLayout({
             title="Settings"
             description="Manage your account settings and set preferences."
           />
-          <StoreDelete user={user} className="ml-auto" params={params} />
+          <StoreDelete className="ml-auto" params={params} />
         </div>
         <Separator className="my-6" />
         <div className="flex flex-col p-4 space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">

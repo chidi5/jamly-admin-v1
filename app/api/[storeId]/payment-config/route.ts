@@ -1,3 +1,4 @@
+import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 import { encrypt } from "@/lib/queries";
 import { auth } from "@clerk/nextjs";
@@ -8,7 +9,7 @@ export async function POST(
   { params }: { params: { storeId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const user = await currentUser();
 
     const body = await request.json();
 
@@ -16,34 +17,52 @@ export async function POST(
 
     const encryptedSecretKey = await encrypt(secretKey);
 
-    if (!userId) {
-      return new NextResponse("Unauthenticated", { status: 403 });
+    if (!user) {
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthenticated user!" }),
+        { status: 403 }
+      );
     }
 
     if (!provider) {
-      return new NextResponse("Provider is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Provider is required" }),
+        { status: 400 }
+      );
     }
 
     if (!publicKey) {
-      return new NextResponse("Public key is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Public key is required" }),
+        { status: 400 }
+      );
     }
 
     if (!secretKey) {
-      return new NextResponse("Secret key is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Secret key is required" }),
+        { status: 400 }
+      );
     }
 
     if (!params.storeId) {
-      return new NextResponse("Store id is required", { status: 400 });
+      return new NextResponse(
+        JSON.stringify({ message: "Store id is required" }),
+        { status: 400 }
+      );
     }
 
     const storeByUserId = await prismadb.store.findFirst({
       where: {
-        AND: [{ id: params.storeId }, { users: { some: { id: userId } } }],
+        AND: [{ id: params.storeId }, { users: { some: { id: user.id } } }],
       },
     });
 
     if (!storeByUserId) {
-      return new NextResponse("Unauthorized", { status: 405 });
+      return new NextResponse(
+        JSON.stringify({ message: "Unauthorized access!" }),
+        { status: 405 }
+      );
     }
 
     const result = await prismadb.$transaction([
@@ -69,8 +88,11 @@ export async function POST(
     return NextResponse.json(paymentConfig);
   } catch (error) {
     console.log("Error creating payment configuration:", error);
-    return new NextResponse("Failed to create payment configuration", {
-      status: 500,
-    });
+    return new NextResponse(
+      JSON.stringify({ message: "Failed to create payment configuration" }),
+      {
+        status: 500,
+      }
+    );
   }
 }

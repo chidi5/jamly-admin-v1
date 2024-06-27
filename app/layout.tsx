@@ -1,11 +1,10 @@
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import AuthProvider from "@/providers/auth-provider";
 import ModalProvider from "@/providers/modal-provider";
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/providers/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <AuthProvider>
       <html lang="en">
         <body className={cn("relative h-full antialiased", inter.className)}>
           <Toaster />
@@ -30,6 +29,6 @@ export default function RootLayout({
           </main>
         </body>
       </html>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }

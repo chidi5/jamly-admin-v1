@@ -14,9 +14,9 @@ import { Input } from "@/components/ui/input";
 import Modal from "@/components/ui/modal";
 import { useToast } from "@/components/ui/use-toast";
 import { useStoreModal } from "@/hooks/use-store-modal";
-import { useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -33,7 +33,7 @@ const StoreModal = () => {
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan");
 
-  const { user } = useUser();
+  const { data: session } = useSession();
 
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState({});
@@ -52,10 +52,9 @@ const StoreModal = () => {
       setLoading(true);
       let customerId;
       const data = {
-        email: user?.emailAddresses[0].emailAddress,
-        first_name: user?.firstName,
-        last_name: user?.lastName,
-        phone: user?.phoneNumbers[0].phoneNumber,
+        email: session?.user.email,
+        first_name: session?.user.firstName,
+        last_name: session?.user.lastName,
       };
       const customerResponse = await axios.post(
         "/api/paystack/create-customer",
@@ -77,12 +76,11 @@ const StoreModal = () => {
       } else {
         window.location.assign(`/store/${response.data.id}`);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong",
-        description: "There was a problem with your request",
+        description: error || "There was a problem with your request",
       });
     } finally {
       setLoading(false);
@@ -107,13 +105,9 @@ const StoreModal = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Store Name</FormLabel>
                       <FormControl>
-                        <Input
-                          disabled={loading}
-                          placeholder="E-Commerce"
-                          {...field}
-                        />
+                        <Input disabled={loading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

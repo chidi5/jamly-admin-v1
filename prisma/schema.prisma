@@ -18,18 +18,78 @@ enum Role {
   STAFF_USER
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  avatarUrl String   @db.Text
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  role      Role     @default(STAFF_USER)
-  storeId   String?
-  Store     Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
-  @@index([storeId])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  firstName             String?
+  lastName              String?
+  email                 String?                @unique
+  emailVerified         DateTime?              @map("email_verified")
+  image                 String?
+  password              String?
+  role                  Role                   @default(STORE_OWNER)
+  stores                Store[]                @relation("UserStores")
+  isTwoFactorEnabled    Boolean                @default(false)
+  twoFactorConfirmation TwoFactorConfirmation?
+  accounts              Account[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@map("users")
 }
 
 model Store {
@@ -46,7 +106,8 @@ model Store {
   country         String?
   locale          String          @default("en-NG")
   defaultCurrency String
-  users           User[]
+  users           User[]          @relation("UserStores")
+  customers       Customer[]
   billboards      Billboard[]     @relation("StoreToBillboard")
   categories      Category[]      @relation("StoreToCategory")
   products        Product[]       @relation("StoreToProduct")
@@ -57,6 +118,20 @@ model Store {
   paymentConfigs  PaymentConfig[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model Billboard {
@@ -134,6 +209,8 @@ model Order {
   id         String      @id @default(uuid())
   storeId    String
   store      Store       @relation("StoreToOrder", fields: [storeId], references: [id], onDelete: Cascade)
+  customerId String?
+  customer   Customer?   @relation(fields: [customerId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
   isPaid     Boolean     @default(false)
   phone      String      @default("")
@@ -252,20 +329,16 @@ model Discount {
   product   Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
-enum InvitationStatus {
-  ACCEPTED
-  REVOKED
-  PENDING
-}
-
 model Invitation {
-  id      String           @id @default(uuid())
-  email   String           @unique
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+  role    Role     @default(STAFF_USER)
   storeId String
-  Store   Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  status  InvitationStatus @default(PENDING)
-  role    Role             @default(STAFF_USER)
+  Store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
+  @@unique([email, token])
   @@index([storeId])
 }
 

@@ -1,15 +1,16 @@
-import { verifyAndAcceptInvitation } from "@/lib/queries";
-import { currentUser } from "@clerk/nextjs";
+import { currentUser } from "@/hooks/use-current-user";
+import { verifyAndAcceptInvitation } from "@/lib/queries/invitation";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 
 const layout = async ({ children }: { children: ReactNode }) => {
-  const storeId = await verifyAndAcceptInvitation();
   const user = await currentUser();
 
   if (!user) {
     redirect("/sign-in");
   }
+
+  const storeId = await verifyAndAcceptInvitation();
 
   if (storeId) {
     redirect("/store");

@@ -1,47 +1,57 @@
+"use client";
+
 import { XIcon } from "lucide-react";
-import React from "react";
+import React, { useTransition } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Invitation } from "@prisma/client";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import {
-  getInviteId,
-  revokeInvitation,
-  saveActivityLogsNotification,
-} from "@/lib/queries";
 import { toast } from "./ui/use-toast";
 import { useRouter } from "next/navigation";
+import {
+  revokeInvitation,
+  saveActivityLogsNotification,
+} from "@/lib/queries/invitation";
+import Spinner from "./Spinner";
 
 type InvitationProps = {
   data: Invitation[];
 };
 
-const InvitationAlert = async ({ data }: InvitationProps) => {
+const InvitationAlert = ({ data }: InvitationProps) => {
   const router = useRouter();
+  const [loading, startTransition] = useTransition();
 
   const handleRevoke = async (value: any) => {
-    try {
-      const invitation_id = await getInviteId(data);
-      const res = await revokeInvitation(value.id, invitation_id?.id);
-      await saveActivityLogsNotification({
-        storeId: value.storeId,
-        description: `Revoked ${res.email}`,
-      });
+    startTransition(async () => {
+      const response = await revokeInvitation(value.id);
+
+      if (response.success) {
+        const res = await saveActivityLogsNotification({
+          storeId: value.storeId,
+          description: `Revoked ${value.email}`,
+        });
+
+        if (res.success) {
+          toast({
+            description: response.success,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            description: res.error,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          description: response.error,
+        });
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "Invitation Revoked",
-      });
-    } catch (error) {
-      console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Oppse!",
-        description: "Could not revoke invitation",
-      });
-    }
+    });
   };
 
   return (
@@ -63,12 +73,10 @@ const InvitationAlert = async ({ data }: InvitationProps) => {
               </div>
               <Badge
                 className={cn({
-                  "bg-emerald-500": invitation.status === "ACCEPTED",
-                  "bg-yellow-500": invitation.status === "PENDING",
-                  "bg-red-500": invitation.status === "REVOKED",
+                  "bg-yellow-500": invitation,
                 })}
               >
-                {invitation.status}
+                Pending
               </Badge>
               <div className="flex ml-auto">
                 <Button
@@ -76,7 +84,7 @@ const InvitationAlert = async ({ data }: InvitationProps) => {
                   className=" text-red-500 hover:text-red-600"
                   onClick={() => handleRevoke(invitation)}
                 >
-                  <XIcon className="w-5 h-5" />
+                  {loading ? <Spinner /> : <XIcon className="w-5 h-5" />}
                   &nbsp;Revoke invite
                 </Button>
               </div>

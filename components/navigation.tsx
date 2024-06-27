@@ -1,13 +1,14 @@
 "use client";
 
+import { useUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import MaxWidthWrapper from "./MaxWidthWrapper";
 import { buttonVariants } from "./ui/button";
-import { usePathname } from "next/navigation";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton } from "./auth/user-button";
 
 const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -92,29 +93,25 @@ const Navigation = () => {
               </ul>
             </nav>
             <div className="ml-auto flex items-center space-x-4">
-              {isLoaded && (
-                <>
-                  <Link
-                    href="/sign-in"
-                    className={cn(
-                      buttonVariants({ variant: "ghost" }),
-                      "text-base",
-                      user ? "hidden" : ""
-                    )}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/store"
-                    className={cn("!text-base !h-9", buttonVariants())}
-                  >
-                    {user ? "Dashboard" : "Get Started"}
-                  </Link>
-                  <div className={!user ? "hidden" : ""}>
-                    <UserButton />
-                  </div>
-                </>
-              )}
+              <Link
+                href="/sign-in"
+                className={cn(
+                  buttonVariants({ variant: "ghost" }),
+                  "text-base",
+                  user ? "hidden" : ""
+                )}
+              >
+                Login
+              </Link>
+              <Link
+                href="/store"
+                className={cn("!text-base !h-9", buttonVariants())}
+              >
+                {user ? "Dashboard" : "Get Started"}
+              </Link>
+              <div className={!user ? "hidden" : ""}>
+                <UserButton />
+              </div>
             </div>
           </div>
         </MaxWidthWrapper>

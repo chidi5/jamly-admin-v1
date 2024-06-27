@@ -1,6 +1,15 @@
 "use client";
+import {
+  saveActivityLogsNotification,
+  sendInvitation,
+} from "@/lib/queries/invitation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import React from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import Spinner from "./Spinner";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
@@ -16,8 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "./ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "./ui/input";
 import {
   Select,
   SelectContent,
@@ -25,12 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Button } from "./ui/button";
-import { saveActivityLogsNotification, sendInvitation } from "@/lib/queries";
 import { toast } from "./ui/use-toast";
-import { Input } from "./ui/input";
-import Spinner from "./Spinner";
-import { useRouter } from "next/navigation";
 
 interface SendInvitationProps {
   storeId: string;
@@ -57,26 +60,33 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
   });
 
   const onSubmit = async (values: z.infer<typeof userDataSchema>) => {
-    try {
-      const res = await sendInvitation(values.role, values.email, storeId);
-      await saveActivityLogsNotification({
+    const response = await sendInvitation(values.email, values.role, storeId);
+
+    if (response.success) {
+      const res = await saveActivityLogsNotification({
         storeId: storeId,
-        description: `Invited ${res.email}`,
+        description: `Invited ${values.email}`,
       });
-      onClose();
-      router.refresh();
-      toast({
-        title: "Success",
-        description: "Created and sent invitation",
-      });
-    } catch (error) {
-      console.log(error);
+
+      if (res.success) {
+        toast({
+          description: response.success,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          description: res.error,
+        });
+      }
+    } else {
       toast({
         variant: "destructive",
-        title: "Oppse!",
-        description: "Could not send invitation",
+        description: response.error,
       });
     }
+
+    onClose();
+    router.refresh();
   };
 
   return (
@@ -96,27 +106,30 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
             className="flex flex-col gap-6"
           >
             <FormField
-              disabled={form.formState.isSubmitting}
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem className="flex-1">
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Email" {...field} />
+                    <Input
+                      disabled={form.formState.isSubmitting}
+                      placeholder="Email"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
-              disabled={form.formState.isSubmitting}
               control={form.control}
               name="role"
               render={({ field }) => (
                 <FormItem className="flex-1">
                   <FormLabel>User role</FormLabel>
                   <Select
+                    disabled={form.formState.isSubmitting}
                     onValueChange={(value) => field.onChange(value)}
                     defaultValue={field.value}
                   >
