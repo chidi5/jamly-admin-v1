@@ -2,7 +2,8 @@ import prismadb from "@/lib/prismadb";
 import { format } from "date-fns";
 import OrderClient from "./components/client";
 import { OrderColumn } from "./components/columns";
-import { getAuthUserDetails, priceFormatter } from "@/lib/queries";
+import { priceFormatter } from "@/lib/queries";
+import { getAuthUserDetails } from "@/lib/queries/user";
 
 type OrderProps = {
   params: { storeId: string };
@@ -35,11 +36,17 @@ const OrderPage = async ({ params }: OrderProps) => {
   });
 
   const user = await getAuthUserDetails();
+
   if (!user) return null;
 
+  const selectedStore = user.stores.find(
+    (store) => store.id === params.storeId
+  );
+  if (!selectedStore) return null;
+
   const formatter = await priceFormatter(
-    user.Store!.locale,
-    user.Store!.defaultCurrency
+    selectedStore.locale,
+    selectedStore.defaultCurrency
   );
 
   const formattedOrders: OrderColumn[] = orders.map((item) => ({

@@ -14,9 +14,14 @@ const ProductPage = async ({ params }: ProductProps) => {
 
   if (!user) return null;
 
+  const selectedStore = user.stores.find(
+    (store) => store.id === params.storeId
+  );
+  if (!selectedStore) return null;
+
   const formatter = await priceFormatter(
-    user.Store!.locale,
-    user.Store!.defaultCurrency
+    selectedStore.locale,
+    selectedStore.defaultCurrency
   );
 
   const products = await prismadb.product.findMany({
