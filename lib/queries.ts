@@ -84,7 +84,7 @@ export const initUser = async (newUser: Partial<User>) => {
     create: {
       id: session.user?.id,
       image: session.user?.image,
-      email: session.user?.email,
+      email: session.user?.email!,
       firstName: session.user.firstName,
       lastName: session.user.lastName,
       role: newUser.role || "STAFF_USER",
