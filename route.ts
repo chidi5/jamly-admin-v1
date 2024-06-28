@@ -8,7 +8,7 @@ export const publicRoutes = [
   "/api/stores/:path*",
   "/api/resend-verification-email",
   "/",
-  "/site",
+  "/site/*",
   "/new-verification",
   "/new-password",
   "/join-team",
