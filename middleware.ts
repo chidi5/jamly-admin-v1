@@ -12,8 +12,10 @@ export default auth((req) => {
   const isSignedIn = !!req.auth;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(ApiauthPrefix);
-  const isPublicRoutes = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+  const isPublicRoutes = publicRoutes.some((route) =>
+    new RegExp(`^${route.replace(/:[^\s/]+/g, ".*")}$`).test(nextUrl.pathname)
+  );
 
   if (isApiAuthRoute) {
     return;

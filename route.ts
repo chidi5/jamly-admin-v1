@@ -5,6 +5,7 @@
  */
 export const publicRoutes = [
   "/api/:path*",
+  "/api/stores/:path*",
   "/api/resend-verification-email",
   "/",
   "/site",
