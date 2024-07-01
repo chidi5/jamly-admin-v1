@@ -7,9 +7,34 @@ import {
   publicRoutes,
 } from "./route";
 
+const corsOptions = {
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Credentials": "true",
+};
+
 export default auth((req) => {
   const { nextUrl } = req;
   const isSignedIn = !!req.auth;
+  const origin = req.headers.get("origin") ?? "";
+
+  // Handle preflighted requests
+  const isPreflight = req.method === "OPTIONS";
+
+  if (isPreflight) {
+    const preflightHeaders = {
+      ...{ "Access-Control-Allow-Origin": origin },
+      ...corsOptions,
+    };
+    return NextResponse.json({}, { headers: preflightHeaders });
+  }
+
+  const response = NextResponse.next();
+  response.headers.set("Access-Control-Allow-Origin", origin);
+
+  Object.entries(corsOptions).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(ApiauthPrefix);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
@@ -18,14 +43,14 @@ export default auth((req) => {
   );
 
   if (isApiAuthRoute) {
-    return;
+    return response;
   }
 
   if (isAuthRoute) {
     if (isSignedIn) {
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
-    return;
+    return response;
   }
 
   if (!isSignedIn && !isPublicRoutes) {
@@ -47,7 +72,7 @@ export default auth((req) => {
     return NextResponse.rewrite(new URL("/site", nextUrl));
   }
 
-  return;
+  return response;
 });
 
 export const config = {

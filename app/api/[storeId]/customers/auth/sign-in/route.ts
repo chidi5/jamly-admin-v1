@@ -1,41 +1,90 @@
-import prismadb from "@/lib/prismadb";
 import bcrypt from "bcryptjs";
+import { getCustomerbyEmail } from "@/lib/queries/user";
 import jwt from "jsonwebtoken";
+import { AuthError } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = "1d";
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function POST(req: NextRequest) {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
-  }
+  try {
+    const { email, password } = await req.json();
+    const origin = req.headers.get("origin") ?? "";
 
-  const { email, password } = await req.json();
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email and password are required!" },
+        { status: 400 }
+      );
+    }
 
-  const user = await prismadb.customer.findUnique({
-    where: { email },
-  });
+    const customer = await getCustomerbyEmail(email);
 
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!customer || !customer.password) {
+      return NextResponse.json(
+        { error: "Invalid credentials!" },
+        { status: 401 }
+      );
+    }
+
+    const isValid = await bcrypt.compare(password, customer.password);
+
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "Invalid credentials!" },
+        { status: 401 }
+      );
+    }
+
+    // Create a JWT token for the session
+    const token = jwt.sign(
+      {
+        id: customer.id,
+        email: customer.email,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        role: "CUSTOMER",
+      },
+      JWT_SECRET,
+      { expiresIn: "2d" }
+    );
+
+    const response = NextResponse.json(
+      { success: "Customer signed in!", customer },
+      { status: 200 }
+    );
+
+    // Extract domain from the origin
+    const url = new URL(origin);
+    const domain = url.hostname;
+
+    response.cookies.set("auth-session", token, {
+      sameSite: "none",
+      secure: true,
+      path: "/",
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 2,
+    });
+
+    return response;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return NextResponse.json(
+            { error: "Invalid credentials!" },
+            { status: 401 }
+          );
+        default:
+          return NextResponse.json(
+            { error: "Something went wrong!" },
+            { status: 500 }
+          );
+      }
+    }
     return NextResponse.json(
-      { message: "Invalid email or password" },
-      { status: 401 }
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
   }
-
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
-
-  const response = NextResponse.json({ user });
-  response.cookies.set("token", token, {
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 24, // 1 day
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
-
-  return response;
 }

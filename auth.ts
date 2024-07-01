@@ -1,12 +1,15 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import prismadb from "./lib/prismadb";
 
 import { getTwoFactorConfirmationByUserId } from "./lib/queries/two-factor-confirmation";
 import { getUserbyEmail, getUserbyId } from "./lib/queries/user";
-import { SignInSchema } from "./schemas";
+import { CustomerSignInSchema, SignInSchema } from "./schemas";
+
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prismadb),
@@ -31,6 +34,46 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               ...user,
               firstName: user.firstName ?? "",
               lastName: user.lastName ?? "",
+            };
+          }
+        }
+        return null;
+      },
+    }),
+    Credentials({
+      id: "customer-credentials",
+      name: "Customer Credentials",
+      authorize: async (credentials) => {
+        const validatedFields = CustomerSignInSchema.safeParse(credentials);
+
+        if (validatedFields.success) {
+          const { email, password } = validatedFields.data;
+
+          const customer = await prismadb.customer.findUnique({
+            where: { email: email },
+          });
+
+          if (!customer || !customer.password) return null;
+
+          const isValid = await bcrypt.compare(password, customer.password);
+
+          if (isValid) {
+            const token = jwt.sign(
+              {
+                id: customer.id,
+                email: customer.email,
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                role: "CUSTOMER",
+              },
+              JWT_SECRET,
+              { expiresIn: "2d" }
+            );
+
+            return {
+              ...customer,
+              token,
+              role: "CUSTOMER", // Add a role for the customer
             };
           }
         }

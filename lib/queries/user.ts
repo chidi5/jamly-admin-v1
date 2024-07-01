@@ -237,3 +237,32 @@ export const updateUser = async (data: {
     return { error: "Something went wrong!" };
   }
 };
+
+//customers
+export const getCustomerbyEmail = async (email: string) => {
+  try {
+    const user = await prismadb.customer.findUnique({
+      where: { email },
+      include: {
+        stores: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    return null;
+  }
+};
+
+export const getCustomerbyId = async (id: string) => {
+  try {
+    const user = await prismadb.customer.findUnique({
+      where: { id },
+      include: {
+        stores: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    return null;
+  }
+};

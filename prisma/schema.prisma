@@ -107,7 +107,7 @@ model Store {
   locale          String          @default("en-NG")
   defaultCurrency String
   users           User[]          @relation("UserStores")
-  customers       Customer[]
+  customers       Customer[]      @relation("CustomerStores")
   billboards      Billboard[]     @relation("StoreToBillboard")
   categories      Category[]      @relation("StoreToCategory")
   products        Product[]       @relation("StoreToProduct")
@@ -122,16 +122,16 @@ model Store {
 
 model Customer {
   id        String   @id @default(uuid())
-  name      String
+  firstName String
+  lastName  String
   email     String   @unique
   password  String
-  storeId   String
-  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  stores    Store[]  @relation("CustomerStores")
   orders    Order[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([storeId])
+  @@index([email])
 }
 
 model Billboard {
@@ -205,6 +205,15 @@ model AdditionalInfoSection {
   product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  //RETURN_REQUESTED
+  //RETURNED
+  //REFUNDED
+}
+
 model Order {
   id         String      @id @default(uuid())
   storeId    String
@@ -212,9 +221,10 @@ model Order {
   customerId String?
   customer   Customer?   @relation(fields: [customerId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
+  status     OrderStatus @default(PENDING)
   isPaid     Boolean     @default(false)
-  phone      String      @default("")
-  address    String      @default("")
+  phone      String
+  address    String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
