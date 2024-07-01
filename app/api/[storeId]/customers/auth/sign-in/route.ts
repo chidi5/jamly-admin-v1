@@ -56,13 +56,17 @@ export async function POST(req: NextRequest) {
 
     // Extract domain from the origin
     const url = new URL(origin);
-    const domain = url.hostname;
+    const hostnameParts = url.hostname.split(".");
+    const domain =
+      hostnameParts.length > 2
+        ? hostnameParts.slice(-2).join(".")
+        : url.hostname;
 
     console.log({ domain });
 
     response.cookies.set("auth-session", token, {
       sameSite: "none",
-      domain: domain,
+      domain: `.${domain}`,
       secure: true,
       path: "/",
       httpOnly: true,
