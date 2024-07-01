@@ -58,8 +58,11 @@ export async function POST(req: NextRequest) {
     const url = new URL(origin);
     const domain = url.hostname;
 
+    console.log({ domain });
+
     response.cookies.set("auth-session", token, {
       sameSite: "none",
+      domain: domain,
       secure: true,
       path: "/",
       httpOnly: true,
