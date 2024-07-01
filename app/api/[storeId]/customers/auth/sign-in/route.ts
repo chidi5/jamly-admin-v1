@@ -50,23 +50,12 @@ export async function POST(req: NextRequest) {
     );
 
     const response = NextResponse.json(
-      { success: "Customer signed in!", customer },
+      { success: "Customer signed in!", token },
       { status: 200 }
     );
 
-    // Extract domain from the origin
-    const url = new URL(origin);
-    const hostnameParts = url.hostname.split(".");
-    const domain =
-      hostnameParts.length > 2
-        ? hostnameParts.slice(-2).join(".")
-        : url.hostname;
-
-    console.log({ domain });
-
     response.cookies.set("auth-session", token, {
       sameSite: "none",
-      domain: `.${domain}`,
       secure: true,
       path: "/",
       httpOnly: true,
