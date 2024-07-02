@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       sameSite: "none",
       secure: true,
       path: "/",
-      expires: Date.now() + twoDays,
+      expires: new Date(Date.now() + twoDays),
     });
 
     return response;
