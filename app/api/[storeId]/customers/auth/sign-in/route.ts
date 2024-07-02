@@ -5,7 +5,7 @@ import { AuthError } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const PUBLIC_DOMAIN = process.env.NEXT_PUBLIC_DOMAIN!;
+const PUBLIC_SUBDOMAIN = process.env.NEXT_PUBLIC_SUBDOMAIN!;
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const twoDays = 24 * 60 * 60 * 1000 * 2;
 
     response.cookies.set("auth-session", token, {
-      domain: `.${PUBLIC_DOMAIN}`,
+      domain: `.${PUBLIC_SUBDOMAIN}`,
       sameSite: "none",
       secure: true,
       path: "/",
