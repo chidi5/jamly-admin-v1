@@ -4,7 +4,11 @@ import jwt from "jsonwebtoken";
 import { AuthError } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const parseKey = (key: string) => {
+  return key.split("\\n").join("\n");
+};
+
+const privateKey = parseKey(process.env.JWT_SECRET!);
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,8 +49,8 @@ export async function POST(req: NextRequest) {
         lastName: customer.lastName,
         role: "CUSTOMER",
       },
-      JWT_SECRET,
-      { expiresIn: "2d" }
+      privateKey,
+      { algorithm: "RS256", expiresIn: "2d" }
     );
 
     const response = NextResponse.json(
@@ -80,6 +84,7 @@ export async function POST(req: NextRequest) {
           );
       }
     }
+    console.log({ error });
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
