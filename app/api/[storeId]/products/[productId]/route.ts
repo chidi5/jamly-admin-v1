@@ -176,6 +176,9 @@ export async function PATCH(
 
     const transaction = await prismadb.$transaction(
       async (prisma) => {
+        const start = Date.now();
+
+        console.log("Updating basic product info...");
         const updatedProduct = await updateBasicProductInfo(
           prisma,
           body,
@@ -183,21 +186,38 @@ export async function PATCH(
           store.defaultCurrency,
           existingProduct
         );
+        console.log(`Updated product info in ${Date.now() - start}ms`);
+
+        console.log("Updating product images...");
         await updateProductImages(prisma, body.images, params.productId);
+        console.log(`Updated product images in ${Date.now() - start}ms`);
+
+        console.log("Updating additional info sections...");
         await updateAdditionalInfoSections(
           prisma,
           body.additionalInfoSections,
           params.productId
         );
+        console.log(
+          `Updated additional info sections in ${Date.now() - start}ms`
+        );
+
+        console.log("Updating product categories...");
         await updateProductCategories(
           prisma,
           body.categories,
           params.productId
         );
+        console.log(`Updated product categories in ${Date.now() - start}ms`);
+
+        console.log("Updating options and values...");
         const optionValues = await createOptionsAndValues(
           body,
           updatedProduct.id
         );
+        console.log(`Updated options and values in ${Date.now() - start}ms`);
+
+        console.log("Updating product variants...");
         await updateProductVariants(
           prisma,
           body.variants,
@@ -205,20 +225,25 @@ export async function PATCH(
           optionValues,
           store.defaultCurrency
         );
+        console.log(`Updated product variants in ${Date.now() - start}ms`);
+
         return updatedProduct;
       },
       {
-        maxWait: 30000,
-        timeout: 60000,
+        maxWait: 20000,
+        timeout: 40000,
       }
     );
 
     return NextResponse.json(transaction);
   } catch (error: any) {
     console.error("[PRODUCTS_PATCH]", error);
-    return new NextResponse(JSON.stringify({ message: "Internal error" }), {
-      status: 500,
-    });
+    return new NextResponse(
+      JSON.stringify({ message: error.message || "Internal error" }),
+      {
+        status: 500,
+      }
+    );
   }
 }
 
@@ -378,41 +403,6 @@ async function updateProductCategories(
       },
     });
   }
-}
-
-async function updateOptionsAndValues(
-  prisma: any,
-  options: any[],
-  productId: string
-) {
-  await prisma.option.deleteMany({
-    where: { productId: productId },
-  });
-
-  const optionValues = [];
-
-  if (options && options.length > 0) {
-    for (const option of options) {
-      const createdOption = await prisma.option.create({
-        data: {
-          name: option.name,
-          productId: productId,
-        },
-      });
-
-      for (const value of option.values) {
-        const createdValue = await prisma.optionValue.create({
-          data: {
-            value: value,
-            optionId: createdOption.id,
-          },
-        });
-        optionValues.push(createdValue);
-      }
-    }
-  }
-
-  return optionValues;
 }
 
 async function updateProductVariants(
