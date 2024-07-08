@@ -55,7 +55,7 @@ const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2">
-                <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+                <div className="flex md:items-center gap-4 flex-row">
                   <Dot />
                   <p>Set up payment method</p>
                 </div>
@@ -74,7 +74,7 @@ const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
                 )}
               </div>
               <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2 cursor-pointer">
-                <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+                <div className="flex md:items-center gap-4 flex-row">
                   <Dot />
                   <p> Fill in all your bussiness details</p>
                 </div>
@@ -93,7 +93,7 @@ const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
                 )}
               </div>
               <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2 cursor-pointer">
-                <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+                <div className="flex md:items-center gap-4 flex-row">
                   <Dot />
                   <p>Add your first product</p>
                 </div>
@@ -112,7 +112,7 @@ const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
                 )}
               </div>
               <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2 cursor-pointer">
-                <div className="flex md:items-center gap-4 flex-col md:!flex-row">
+                <div className="flex md:items-center gap-4 flex-row">
                   <Dot />
                   <p>Add your socials to display on storefront</p>
                 </div>
