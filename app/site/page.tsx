@@ -16,7 +16,7 @@ import Link from "next/link";
 const HomePage = () => {
   return (
     <>
-      <section className="pt-[33vw] pb-[38vw] lg:pt-[15vw] lg:pb-[8vw] relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
+      <section className="pt-[33vw] pb-[38vw] lg:pt-[15vw] lg:pb-[10vw] relative flex items-center justify-center flex-col bg-[url('/assets/circle.svg')] bg-cover bg-no-repeat">
         <div className="flex flex-col text-left md:text-center items-start md:items-center space-y-8 max-w-screen-lg lg:max-w-full px-2.5 sm:px-0">
           <h1 className="text-2xl sm:text-2xl">From Click to Cart —</h1>
           <h1 className="text-5xl lg:text-7xl leading-[3.5rem] font-normal">
