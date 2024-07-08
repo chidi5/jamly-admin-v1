@@ -89,6 +89,16 @@ interface Variant {
   selectedOptions: { option: { name: string }; value: any }[];
 }
 
+// interface OptionValue {
+
+// }
+
+// interface Option {
+//   id: string;
+//   name: string;
+//   productId: string;
+// }
+
 type ProductFormProps = {
   initialData:
     | (Product & {
@@ -349,6 +359,7 @@ const ProductForm = ({
 
   const handleVariant = useCallback(() => {
     const options = form.getValues("options");
+    console.log({ options });
     if (!options) return;
     const newVariantTitles = generateVariantTitles(options);
 

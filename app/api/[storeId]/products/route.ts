@@ -29,7 +29,6 @@ export async function POST(
     if (!params.storeId)
       throw new Error(JSON.stringify({ message: "Store id is required" }));
 
-    // Fetch the store's default currency
     const store = await prismadb.store.findUnique({
       where: { id: params.storeId },
       select: { defaultCurrency: true },
@@ -118,79 +117,83 @@ export async function POST(
     const optionValues = await createOptionsAndValues(body, product.id);
 
     if (body.variants) {
-      for (const variant of body.variants) {
-        const selectedOptionValues = variant.title.includes("|")
-          ? variant.title.split("|").map((value: string) => {
-              const matchingOptionValue = optionValues.find(
-                (data) => data!.value === value
-              );
-              if (!matchingOptionValue)
-                throw new Error(
-                  JSON.stringify({
-                    message: `Option value "${value}" not found`,
-                  })
+      await Promise.all(
+        body.variants.map(async (variant: any) => {
+          const selectedOptionValues = variant.title.includes("|")
+            ? variant.title.split("|").map((value: string) => {
+                const matchingOptionValue = optionValues.find(
+                  (data) => data!.value === value
                 );
-              return { id: matchingOptionValue.id };
-            })
-          : [
-              {
-                id: optionValues.find((data) => data!.value === variant.title)!
-                  .id,
-              },
-            ];
+                if (!matchingOptionValue)
+                  throw new Error(
+                    JSON.stringify({
+                      message: `Option value "${value}" not found`,
+                    })
+                  );
+                return { id: matchingOptionValue.id };
+              })
+            : [
+                {
+                  id: optionValues.find(
+                    (data) => data!.value === variant.title
+                  )!.id,
+                },
+              ];
 
-        await prismadb.variant.create({
-          data: {
-            title: variant.title,
-            priceData: {
-              create: {
-                price: variant.price,
-                discountedPrice: body.discountedPrice,
-                currency: store.defaultCurrency,
+          await prismadb.variant.create({
+            data: {
+              title: variant.title,
+              priceData: {
+                create: {
+                  price: variant.price,
+                  discountedPrice: body.discountedPrice,
+                  currency: store.defaultCurrency,
+                },
               },
-            },
-            costAndProfitData: variant.costofgoods
-              ? {
-                  create: {
-                    itemCost: variant.costofgoods,
-                    formattedItemCost:
-                      store.defaultCurrency + variant.costofgoods.toFixed(2) ||
-                      store.defaultCurrency + "0.00",
-                    profit:
-                      (body.discountedPrice!
-                        ? body.discountedPrice
-                        : variant.price) - variant.costofgoods,
-                    profitMargin:
-                      ((variant.price - variant.costofgoods) /
-                        (body.discountedPrice!
-                          ? body.discountedPrice
-                          : variant.price)) *
-                        100 ?? 0,
-                    formattedProfit:
-                      store.defaultCurrency +
-                      (
-                        (body.discountedPrice!
-                          ? body.discountedPrice
-                          : variant.price) - variant.costofgoods
-                      ).toFixed(2),
-                  },
-                }
-              : undefined,
-            stock:
-              variant.status || variant.inventory
+              costAndProfitData: variant.costofgoods
                 ? {
                     create: {
-                      trackInventory: variant.inventory ? true : false,
-                      quantity: variant.inventory ?? 0,
-                      inventoryStatus: variant.status ?? "IN_STOCK",
+                      itemCost: variant.costofgoods,
+                      formattedItemCost:
+                        store.defaultCurrency +
+                          variant.costofgoods.toFixed(2) ||
+                        store.defaultCurrency + "0.00",
+                      profit:
+                        (body.discountedPrice!
+                          ? body.discountedPrice
+                          : variant.price) - variant.costofgoods,
+                      profitMargin:
+                        ((variant.price - variant.costofgoods) /
+                          (body.discountedPrice!
+                            ? body.discountedPrice
+                            : variant.price)) *
+                          100 ?? 0,
+                      formattedProfit:
+                        store.defaultCurrency +
+                        (
+                          (body.discountedPrice!
+                            ? body.discountedPrice
+                            : variant.price) - variant.costofgoods
+                        ).toFixed(2),
                     },
                   }
                 : undefined,
-            product: { connect: { id: product.id } },
-            selectedOptions: { connect: selectedOptionValues },
-          },
-        });
-      }
+              stock:
+                variant.status || variant.inventory
+                  ? {
+                      create: {
+                        trackInventory: variant.inventory ? true : false,
+                        quantity: variant.inventory ?? 0,
+                        inventoryStatus: variant.status ?? "IN_STOCK",
+                      },
+                    }
+                  : undefined,
+              product: { connect: { id: product.id } },
+              selectedOptions: { connect: selectedOptionValues },
+            },
+          });
+        })
+      );
     }
 
     return NextResponse.json(product);
