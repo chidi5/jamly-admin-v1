@@ -174,29 +174,37 @@ export async function PATCH(
       );
     }
 
-    const updatedProduct = await updateProduct(
+    // Update product basic info
+    const updatedProduct = await updateBasicProductInfo(
       body,
       params.productId,
       store.defaultCurrency,
       existingProduct
     );
 
-    if (body.options) {
-      await prismadb.option.deleteMany({
-        where: { productId: params.productId },
-      });
-    }
+    // Handle images separately
+    await updateProductImages(body.images, params.productId);
 
-    const optionValues = await createOptionsAndValues(body, updatedProduct.id);
+    // Handle additional info sections separately
+    await updateAdditionalInfoSections(
+      body.additionalInfoSections,
+      params.productId
+    );
 
-    if (body.variants) {
-      await updateVariants(
-        body.variants,
-        updatedProduct.id,
-        optionValues,
-        store.defaultCurrency
-      );
-    }
+    // Handle categories separately
+    await updateProductCategories(body.categories, params.productId);
+
+    // Handle options and variants separately
+    const optionValues = await updateOptionsAndValues(
+      body.options,
+      params.productId
+    );
+    await updateProductVariants(
+      body.variants,
+      params.productId,
+      optionValues,
+      store.defaultCurrency
+    );
 
     return NextResponse.json(updatedProduct);
   } catch (error: any) {
@@ -207,7 +215,9 @@ export async function PATCH(
   }
 }
 
-async function updateProduct(
+// Functions for each part of the update process
+
+async function updateBasicProductInfo(
   body: any,
   productId: string,
   defaultCurrency: string,
@@ -302,31 +312,89 @@ async function updateProduct(
               },
             }
           : undefined,
-      images: {
-        deleteMany: {},
-        createMany: {
-          data: body.images.map((image: { url: string }) => ({
-            url: image.url,
-          })),
-        },
-      },
-      additionalInfoSections: {
-        deleteMany: {},
-        create: body.additionalInfoSections?.map(
-          (info: { title: string; description: string }) => ({
-            title: info.title,
-            description: info.description,
-          })
-        ),
-      },
-      categories: {
-        set: body.categories?.map((id: string) => ({ id })),
-      },
     },
   });
 }
 
-async function updateVariants(
+async function updateProductImages(images: any[], productId: string) {
+  await prismadb.image.deleteMany({
+    where: { productId: productId },
+  });
+
+  if (images && images.length > 0) {
+    await prismadb.image.createMany({
+      data: images.map((image: { url: string }) => ({
+        url: image.url,
+        productId: productId,
+      })),
+    });
+  }
+}
+
+async function updateAdditionalInfoSections(
+  sections: any[],
+  productId: string
+) {
+  await prismadb.additionalInfoSection.deleteMany({
+    where: { productId: productId },
+  });
+
+  if (sections && sections.length > 0) {
+    await prismadb.additionalInfoSection.createMany({
+      data: sections.map((info: { title: string; description: string }) => ({
+        title: info.title,
+        description: info.description,
+        productId: productId,
+      })),
+    });
+  }
+}
+
+async function updateProductCategories(categories: any[], productId: string) {
+  if (categories && categories.length > 0) {
+    await prismadb.product.update({
+      where: { id: productId },
+      data: {
+        categories: {
+          set: categories.map((id: string) => ({ id })),
+        },
+      },
+    });
+  }
+}
+
+async function updateOptionsAndValues(options: any[], productId: string) {
+  await prismadb.option.deleteMany({
+    where: { productId: productId },
+  });
+
+  const optionValues = [];
+
+  if (options && options.length > 0) {
+    for (const option of options) {
+      const createdOption = await prismadb.option.create({
+        data: {
+          name: option.name,
+          productId: productId,
+        },
+      });
+
+      for (const value of option.values) {
+        const createdValue = await prismadb.optionValue.create({
+          data: {
+            value: value,
+            optionId: createdOption.id,
+          },
+        });
+        optionValues.push(createdValue);
+      }
+    }
+  }
+
+  return optionValues;
+}
+
+async function updateProductVariants(
   variants: any[],
   productId: string,
   optionValues: any[],
@@ -336,55 +404,59 @@ async function updateVariants(
     where: { productId: productId },
   });
 
-  for (const variant of variants) {
-    const selectedOptionValues = getSelectedOptionValues(
-      variant.title,
-      optionValues
-    );
+  if (variants && variants.length > 0) {
+    for (const variant of variants) {
+      const selectedOptionValues = getSelectedOptionValues(
+        variant.title,
+        optionValues
+      );
 
-    await prismadb.variant.create({
-      data: {
-        title: variant.title,
-        priceData: {
-          create: {
-            price: variant.price,
-            discountedPrice: variant.discountedPrice,
-            currency: defaultCurrency,
+      await prismadb.variant.create({
+        data: {
+          title: variant.title,
+          priceData: {
+            create: {
+              price: variant.price,
+              discountedPrice: variant.discountedPrice,
+              currency: defaultCurrency,
+            },
           },
-        },
-        costAndProfitData: variant.costofgoods
-          ? {
-              create: {
-                itemCost: variant.costofgoods,
-                formattedItemCost: formatCurrency(
-                  variant.costofgoods,
-                  defaultCurrency
-                ),
-                profit: calculateProfit(variant, defaultCurrency),
-                profitMargin: calculateProfitMargin(variant),
-                formattedProfit: formatCurrency(
-                  calculateProfit(variant, defaultCurrency),
-                  defaultCurrency
-                ),
-              },
-            }
-          : undefined,
-        stock:
-          variant.inventory || variant.status
+          costAndProfitData: variant.costofgoods
             ? {
                 create: {
-                  trackInventory: variant.inventory ? true : false,
-                  quantity: variant.inventory ?? 0,
-                  inventoryStatus: variant.status ?? "IN_STOCK",
+                  itemCost: variant.costofgoods,
+                  formattedItemCost: formatCurrency(
+                    variant.costofgoods,
+                    defaultCurrency
+                  ),
+                  profit: calculateProfit(variant, defaultCurrency),
+                  profitMargin: calculateProfitMargin(variant),
+                  formattedProfit: formatCurrency(
+                    calculateProfit(variant, defaultCurrency),
+                    defaultCurrency
+                  ),
                 },
               }
             : undefined,
-        product: { connect: { id: productId } },
-        selectedOptions: { connect: selectedOptionValues },
-      },
-    });
+          stock:
+            variant.inventory || variant.status
+              ? {
+                  create: {
+                    trackInventory: variant.inventory ? true : false,
+                    quantity: variant.inventory ?? 0,
+                    inventoryStatus: variant.status ?? "IN_STOCK",
+                  },
+                }
+              : undefined,
+          product: { connect: { id: productId } },
+          selectedOptions: { connect: selectedOptionValues },
+        },
+      });
+    }
   }
 }
+
+// Utility functions
 
 function formatCurrency(value: number | undefined, currency: string): string {
   return value !== undefined ? currency + value.toFixed(2) : currency + "0.00";
