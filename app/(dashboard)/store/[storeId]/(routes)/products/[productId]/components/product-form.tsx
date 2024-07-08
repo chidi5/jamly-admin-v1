@@ -359,7 +359,6 @@ const ProductForm = ({
 
   const handleVariant = useCallback(() => {
     const options = form.getValues("options");
-    console.log({ options });
     if (!options) return;
     const newVariantTitles = generateVariantTitles(options);
 
@@ -453,6 +452,7 @@ const ProductForm = ({
     startTransition(async () => {
       try {
         if (initialData) {
+          console.log(data);
           await axios.patch(
             `/api/${params.storeId}/products/${params.productId}`,
             data
