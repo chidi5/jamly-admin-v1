@@ -194,10 +194,9 @@ export async function PATCH(
           body.categories,
           params.productId
         );
-        const optionValues = await updateOptionsAndValues(
-          prisma,
-          body.options,
-          params.productId
+        const optionValues = await createOptionsAndValues(
+          body,
+          updatedProduct.id
         );
         await updateProductVariants(
           prisma,
