@@ -58,16 +58,6 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
 
-    // const twoDays = 24 * 60 * 60 * 1000 * 2;
-
-    // response.cookies.set("auth-session", token, {
-    //   domain: ".google.com",
-    //   sameSite: "none",
-    //   secure: true,
-    //   path: "/",
-    //   expires: new Date(Date.now() + twoDays),
-    // });
-
     return response;
   } catch (error) {
     if (error instanceof AuthError) {

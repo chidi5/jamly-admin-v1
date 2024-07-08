@@ -126,6 +126,8 @@ model Customer {
   lastName  String
   email     String   @unique
   password  String
+  phone     String?
+  address   String?
   stores    Store[]  @relation("CustomerStores")
   orders    Order[]
   createdAt DateTime @default(now())
@@ -207,7 +209,8 @@ model AdditionalInfoSection {
 
 enum OrderStatus {
   PENDING
-  SHIPPED
+  PROCESSING
+  DISPATCHED
   DELIVERED
   //RETURN_REQUESTED
   //RETURNED
@@ -223,12 +226,12 @@ model Order {
   orderItems OrderItem[]
   status     OrderStatus @default(PENDING)
   isPaid     Boolean     @default(false)
-  phone      String
-  address    String
+  phone      String      @default("")
+  address    String      @default("")
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
-  @@index([storeId])
+  @@index([storeId, customerId])
 }
 
 model OrderItem {

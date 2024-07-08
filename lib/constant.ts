@@ -46,18 +46,18 @@ export const paymentOptions = [
         description: "Accept Debit Cards, Transfers with Paystack",
         href: "#",
       },
-      {
-        name: "Flutterwave",
-        src: "/flutterwave.png",
-        description: "Accept Debit Cards, Transfers with Flutterwave",
-        href: "#",
-      },
-      {
-        name: "Paypal",
-        src: "/paypal.png",
-        description: "Accept Debit Cards with Paypal",
-        href: "#",
-      },
+      // {
+      //   name: "Flutterwave",
+      //   src: "/flutterwave.png",
+      //   description: "Accept Debit Cards, Transfers with Flutterwave",
+      //   href: "#",
+      // },
+      // {
+      //   name: "Paypal",
+      //   src: "/paypal.png",
+      //   description: "Accept Debit Cards with Paypal",
+      //   href: "#",
+      // },
     ],
   },
 ];

@@ -57,22 +57,12 @@ const OrderPage = async ({ params }: OrderProps) => {
       .map((orderItem) => orderItem.product.name)
       .join(", "),
     totalPrice: formatter.format(
-      item.orderItems.reduce((total, orderItem) => {
-        if (orderItem.product.manageVariants) {
-          // Sum variant prices
-          const variantTotal = orderItem.product.variants.reduce(
-            (variantSum, variant) => {
-              return variantSum + Number(variant.priceData?.price || 0);
-            },
-            0
-          );
-          return total + variantTotal;
-        } else {
-          // Sum product price
-          return total + Number(orderItem.product.priceData?.price || 0);
-        }
-      }, 0)
+      item.orderItems.reduce(
+        (total, orderItem) => total + orderItem.price.toNumber(),
+        0
+      )
     ),
+    status: item.status,
     isPaid: item.isPaid,
     createdAt: format(item.createdAt, "MMMM do, yyyy"),
   }));

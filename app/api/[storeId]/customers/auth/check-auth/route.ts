@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     if (!JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined in environment variables");
     }
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["RS256"] });
     return NextResponse.json({ user: decoded });
   } catch (error) {
     return NextResponse.json({ user: null }, { status: 401 });

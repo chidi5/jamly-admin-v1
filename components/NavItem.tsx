@@ -16,14 +16,14 @@ export function NavItem({
 
   const routes = [
     {
-      href: `/store/${params.storeId}`,
-      label: "Overview",
-      active: pathname === `/store/${params.storeId}`,
-    },
-    {
       href: `/store/${params.storeId}/onboard`,
       label: "Setup",
       active: pathname === `/store/${params.storeId}/onboard`,
+    },
+    {
+      href: `/store/${params.storeId}`,
+      label: "Overview",
+      active: pathname === `/store/${params.storeId}`,
     },
     {
       href: `/store/${params.storeId}/billboards`,
@@ -44,6 +44,11 @@ export function NavItem({
       href: `/store/${params.storeId}/orders`,
       label: "Orders",
       active: pathname === `/store/${params.storeId}/orders`,
+    },
+    {
+      href: `/store/${params.storeId}/customers`,
+      label: "Customers",
+      active: pathname === `/store/${params.storeId}/customers`,
     },
     {
       href: `/store/${params.storeId}/team`,

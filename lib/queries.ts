@@ -503,3 +503,14 @@ export const getPaymentConfig = async (storeId: string) => {
 
   return paymentConfig;
 };
+
+export const getActivePaymentConfig = async (storeId: string) => {
+  const activePaymentConfig = await prismadb.paymentConfig.findFirst({
+    where: {
+      storeId,
+      isActive: true,
+    },
+  });
+
+  return activePaymentConfig;
+};

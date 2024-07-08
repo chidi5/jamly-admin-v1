@@ -19,6 +19,15 @@ export async function GET(
       where: {
         id: params.customerId,
       },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        address: true,
+        createdAt: true,
+      },
     });
 
     return NextResponse.json(customer);
