@@ -137,6 +137,7 @@ export async function PATCH(
     if (!params.productId)
       throw new Error(JSON.stringify({ message: "Product id is required" }));
 
+    // Fetch the store's default currency
     const store = await prismadb.store.findUnique({
       where: { id: params.storeId },
       select: { defaultCurrency: true },
@@ -172,16 +173,14 @@ export async function PATCH(
       );
     }
 
-    const handle =
-      body.name !== existingProduct.name
-        ? await generateUniqueProductHandle(body.name)
-        : existingProduct.handle;
-
     const updatedProduct = await prismadb.product.update({
       where: { id: params.productId },
       data: {
         name: body.name,
-        handle: handle,
+        handle:
+          body.name !== existingProduct.name
+            ? await generateUniqueProductHandle(body.name)
+            : existingProduct.handle,
         description: body.description,
         isFeatured: body.isFeatured,
         isArchived: body.isArchived,
@@ -297,83 +296,79 @@ export async function PATCH(
         where: { productId: updatedProduct.id },
       });
 
-      await Promise.all(
-        body.variants.map(async (variant: any) => {
-          const selectedOptionValues = variant.title.includes("|")
-            ? variant.title.split("|").map((value: string) => {
-                const matchingOptionValue = optionValues.find(
-                  (data) => data!.value === value
+      for (const variant of body.variants) {
+        const selectedOptionValues = variant.title.includes("|")
+          ? variant.title.split("|").map((value: string) => {
+              const matchingOptionValue = optionValues.find(
+                (data) => data!.value === value
+              );
+              if (!matchingOptionValue)
+                throw new Error(
+                  JSON.stringify({
+                    message: `Option value "${value}" not found`,
+                  })
                 );
-                if (!matchingOptionValue)
-                  throw new Error(
-                    JSON.stringify({
-                      message: `Option value "${value}" not found`,
-                    })
-                  );
-                return { id: matchingOptionValue.id };
-              })
-            : [
-                {
-                  id: optionValues.find(
-                    (data) => data!.value === variant.title
-                  )!.id,
-                },
-              ];
-
-          await prismadb.variant.create({
-            data: {
-              title: variant.title,
-              priceData: {
-                create: {
-                  price: variant.price,
-                  discountedPrice: body.discountedPrice,
-                  currency: store.defaultCurrency,
-                },
+              return { id: matchingOptionValue.id };
+            })
+          : [
+              {
+                id: optionValues.find((data) => data!.value === variant.title)!
+                  .id,
               },
-              costAndProfitData: variant.costofgoods
-                ? {
-                    create: {
-                      itemCost: variant.costofgoods,
-                      formattedItemCost:
-                        store.defaultCurrency +
-                          variant.costofgoods.toFixed(2) ||
-                        store.defaultCurrency + "0.00",
-                      profit:
+            ];
+
+        await prismadb.variant.create({
+          data: {
+            title: variant.title,
+            priceData: {
+              create: {
+                price: variant.price,
+                discountedPrice: body.discountedPrice,
+                currency: store.defaultCurrency,
+              },
+            },
+            costAndProfitData: variant.costofgoods
+              ? {
+                  create: {
+                    itemCost: variant.costofgoods,
+                    formattedItemCost:
+                      store.defaultCurrency + variant.costofgoods.toFixed(2) ||
+                      store.defaultCurrency + "0.00",
+                    profit:
+                      (body.discountedPrice!
+                        ? body.discountedPrice
+                        : variant.price) - variant.costofgoods,
+                    profitMargin:
+                      ((variant.price - variant.costofgoods) /
                         (body.discountedPrice!
                           ? body.discountedPrice
-                          : variant.price) - variant.costofgoods,
-                      profitMargin:
-                        ((variant.price - variant.costofgoods) /
-                          (body.discountedPrice!
-                            ? body.discountedPrice
-                            : variant.price)) *
-                          100 ?? 0,
-                      formattedProfit:
-                        store.defaultCurrency +
-                        (
-                          (body.discountedPrice!
-                            ? body.discountedPrice
-                            : variant.price) - variant.costofgoods
-                        ).toFixed(2),
+                          : variant.price)) *
+                        100 ?? 0,
+                    formattedProfit:
+                      store.defaultCurrency +
+                      (
+                        (body.discountedPrice!
+                          ? body.discountedPrice
+                          : variant.price) - variant.costofgoods
+                      ).toFixed(2),
+                  },
+                }
+              : undefined,
+            stock:
+              variant.inventory || variant.status
+                ? {
+                    create: {
+                      trackInventory: variant.inventory ? true : false,
+                      quantity: variant.inventory ?? 0,
+                      inventoryStatus: variant.status ?? "IN_STOCK",
                     },
                   }
                 : undefined,
-              stock:
-                variant.inventory || variant.status
-                  ? {
-                      create: {
-                        trackInventory: variant.inventory ? true : false,
-                        quantity: variant.inventory ?? 0,
-                        inventoryStatus: variant.status ?? "IN_STOCK",
-                      },
-                    }
-                  : undefined,
-              product: { connect: { id: updatedProduct.id } },
-              selectedOptions: { connect: selectedOptionValues },
-            },
-          });
-        })
-      );
+            product: { connect: { id: updatedProduct.id } },
+            selectedOptions: { connect: selectedOptionValues },
+          },
+        });
+      }
     }
 
     return NextResponse.json(updatedProduct);
