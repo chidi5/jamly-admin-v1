@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 import {
-  createOptionsAndValues,
   generateUniqueProductHandle,
   getStoreByUserId,
   validateProductData,
@@ -174,39 +173,57 @@ export async function PATCH(
       );
     }
 
-    // Update product basic info
-    const updatedProduct = await updateBasicProductInfo(
-      body,
-      params.productId,
-      store.defaultCurrency,
-      existingProduct
+    const transaction = await prismadb.$transaction(
+      async (prisma) => {
+        // Update product basic info
+        const updatedProduct = await updateBasicProductInfo(
+          prisma,
+          body,
+          params.productId,
+          store.defaultCurrency,
+          existingProduct
+        );
+
+        // Handle images separately
+        await updateProductImages(prisma, body.images, params.productId);
+
+        // Handle additional info sections separately
+        await updateAdditionalInfoSections(
+          prisma,
+          body.additionalInfoSections,
+          params.productId
+        );
+
+        // Handle categories separately
+        await updateProductCategories(
+          prisma,
+          body.categories,
+          params.productId
+        );
+
+        // Handle options and variants separately
+        const optionValues = await updateOptionsAndValues(
+          prisma,
+          body.options,
+          params.productId
+        );
+        await updateProductVariants(
+          prisma,
+          body.variants,
+          params.productId,
+          optionValues,
+          store.defaultCurrency
+        );
+
+        return updatedProduct;
+      },
+      {
+        maxWait: 5000,
+        timeout: 10000,
+      }
     );
 
-    // Handle images separately
-    await updateProductImages(body.images, params.productId);
-
-    // Handle additional info sections separately
-    await updateAdditionalInfoSections(
-      body.additionalInfoSections,
-      params.productId
-    );
-
-    // Handle categories separately
-    await updateProductCategories(body.categories, params.productId);
-
-    // Handle options and variants separately
-    const optionValues = await updateOptionsAndValues(
-      body.options,
-      params.productId
-    );
-    await updateProductVariants(
-      body.variants,
-      params.productId,
-      optionValues,
-      store.defaultCurrency
-    );
-
-    return NextResponse.json(updatedProduct);
+    return NextResponse.json(transaction);
   } catch (error: any) {
     console.error("[PRODUCTS_PATCH]", error);
     return new NextResponse(JSON.stringify({ message: "Internal error" }), {
@@ -218,6 +235,7 @@ export async function PATCH(
 // Functions for each part of the update process
 
 async function updateBasicProductInfo(
+  prisma: any,
   body: any,
   productId: string,
   defaultCurrency: string,
@@ -228,7 +246,7 @@ async function updateBasicProductInfo(
       ? await generateUniqueProductHandle(body.name)
       : existingProduct.handle;
 
-  return prismadb.product.update({
+  return prisma.product.update({
     where: { id: productId },
     data: {
       name: body.name,
@@ -316,13 +334,17 @@ async function updateBasicProductInfo(
   });
 }
 
-async function updateProductImages(images: any[], productId: string) {
-  await prismadb.image.deleteMany({
+async function updateProductImages(
+  prisma: any,
+  images: any[],
+  productId: string
+) {
+  await prisma.image.deleteMany({
     where: { productId: productId },
   });
 
   if (images && images.length > 0) {
-    await prismadb.image.createMany({
+    await prisma.image.createMany({
       data: images.map((image: { url: string }) => ({
         url: image.url,
         productId: productId,
@@ -332,15 +354,16 @@ async function updateProductImages(images: any[], productId: string) {
 }
 
 async function updateAdditionalInfoSections(
+  prisma: any,
   sections: any[],
   productId: string
 ) {
-  await prismadb.additionalInfoSection.deleteMany({
+  await prisma.additionalInfoSection.deleteMany({
     where: { productId: productId },
   });
 
   if (sections && sections.length > 0) {
-    await prismadb.additionalInfoSection.createMany({
+    await prisma.additionalInfoSection.createMany({
       data: sections.map((info: { title: string; description: string }) => ({
         title: info.title,
         description: info.description,
@@ -350,9 +373,13 @@ async function updateAdditionalInfoSections(
   }
 }
 
-async function updateProductCategories(categories: any[], productId: string) {
+async function updateProductCategories(
+  prisma: any,
+  categories: any[],
+  productId: string
+) {
   if (categories && categories.length > 0) {
-    await prismadb.product.update({
+    await prisma.product.update({
       where: { id: productId },
       data: {
         categories: {
@@ -363,8 +390,12 @@ async function updateProductCategories(categories: any[], productId: string) {
   }
 }
 
-async function updateOptionsAndValues(options: any[], productId: string) {
-  await prismadb.option.deleteMany({
+async function updateOptionsAndValues(
+  prisma: any,
+  options: any[],
+  productId: string
+) {
+  await prisma.option.deleteMany({
     where: { productId: productId },
   });
 
@@ -372,7 +403,7 @@ async function updateOptionsAndValues(options: any[], productId: string) {
 
   if (options && options.length > 0) {
     for (const option of options) {
-      const createdOption = await prismadb.option.create({
+      const createdOption = await prisma.option.create({
         data: {
           name: option.name,
           productId: productId,
@@ -380,7 +411,7 @@ async function updateOptionsAndValues(options: any[], productId: string) {
       });
 
       for (const value of option.values) {
-        const createdValue = await prismadb.optionValue.create({
+        const createdValue = await prisma.optionValue.create({
           data: {
             value: value,
             optionId: createdOption.id,
@@ -395,12 +426,13 @@ async function updateOptionsAndValues(options: any[], productId: string) {
 }
 
 async function updateProductVariants(
+  prisma: any,
   variants: any[],
   productId: string,
   optionValues: any[],
   defaultCurrency: string
 ) {
-  await prismadb.variant.deleteMany({
+  await prisma.variant.deleteMany({
     where: { productId: productId },
   });
 
@@ -411,7 +443,7 @@ async function updateProductVariants(
         optionValues
       );
 
-      await prismadb.variant.create({
+      await prisma.variant.create({
         data: {
           title: variant.title,
           priceData: {
