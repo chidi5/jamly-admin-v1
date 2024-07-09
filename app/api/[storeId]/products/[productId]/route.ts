@@ -454,9 +454,6 @@ async function updateProductVariants(
           productId_title: { productId: productId, title: variant.title },
         },
         update: {
-          sku: variant.sku,
-          barcode: variant.barcode,
-          weight: variant.weight,
           priceData: {
             update: {
               price: variant.price,
@@ -468,20 +465,28 @@ async function updateProductVariants(
             ? {
                 upsert: {
                   create: {
-                    costOfGoods: variant.costofgoods,
+                    itemCost: variant.costofgoods,
                     profit: calculateProfit(variant, defaultCurrency),
                     profitMargin: calculateProfitMargin(variant),
                     formattedProfit: formatCurrency(
                       calculateProfit(variant, defaultCurrency),
                       defaultCurrency
                     ),
+                    formattedItemCost: formattedItemCost(
+                      variant,
+                      defaultCurrency
+                    ),
                   },
                   update: {
-                    costOfGoods: variant.costofgoods,
+                    itemCost: variant.costofgoods,
                     profit: calculateProfit(variant, defaultCurrency),
                     profitMargin: calculateProfitMargin(variant),
                     formattedProfit: formatCurrency(
                       calculateProfit(variant, defaultCurrency),
+                      defaultCurrency
+                    ),
+                    formattedItemCost: formattedItemCost(
+                      variant,
                       defaultCurrency
                     ),
                   },
@@ -509,9 +514,6 @@ async function updateProductVariants(
         },
         create: {
           title: variant.title,
-          sku: variant.sku,
-          barcode: variant.barcode,
-          weight: variant.weight,
           priceData: {
             create: {
               price: variant.price,
@@ -522,11 +524,15 @@ async function updateProductVariants(
           costAndProfitData: variant.costofgoods
             ? {
                 create: {
-                  costOfGoods: variant.costofgoods,
+                  itemCost: variant.costofgoods,
                   profit: calculateProfit(variant, defaultCurrency),
                   profitMargin: calculateProfitMargin(variant),
                   formattedProfit: formatCurrency(
                     calculateProfit(variant, defaultCurrency),
+                    defaultCurrency
+                  ),
+                  formattedItemCost: formattedItemCost(
+                    variant,
                     defaultCurrency
                   ),
                 },
@@ -558,6 +564,12 @@ function formatCurrency(value: number | undefined, currency: string): string {
 
 function calculateProfit(variant: any, defaultCurrency: string): number {
   return (variant.discountedPrice ?? variant.price) - variant.costofgoods;
+}
+
+function formattedItemCost(variant: any, defaultCurrency: string): string {
+  return (
+    defaultCurrency + variant.costofgoods.toFixed(2) || defaultCurrency + "0.00"
+  );
 }
 
 function calculateProfitMargin(variant: any): number {
