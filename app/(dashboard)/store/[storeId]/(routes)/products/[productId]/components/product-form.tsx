@@ -78,6 +78,13 @@ import CategoryModalForm from "./category-modal-form";
 import InventoryStatusSelect, {
   inventoryStatusOptions,
 } from "./inventory-status-select";
+import {
+  createProduct,
+  createVariants,
+  fetchStoreAndGenerateHandle,
+  validateAndInitialize,
+} from "@/lib/queries/product";
+import { createOptionsAndValues, getStoreByUserId } from "@/lib/queries";
 
 interface Variant {
   id: string;
@@ -449,6 +456,9 @@ const ProductForm = ({
   };
 
   const onSubmit = async (data: ProductFormValues) => {
+    const storeId = Array.isArray(params.storeId)
+      ? params.storeId[0]
+      : params.storeId;
     startTransition(async () => {
       try {
         if (initialData) {
@@ -459,7 +469,22 @@ const ProductForm = ({
           );
         } else {
           console.log(data);
-          await axios.post(`/api/${params.storeId}/products`, data);
+          //await axios.post(`/api/${params.storeId}/products`, data);
+          const { user, body } = await validateAndInitialize(data);
+          const { store, handle } = await fetchStoreAndGenerateHandle(
+            storeId,
+            body
+          );
+          await getStoreByUserId(storeId, user!.id);
+
+          const product = await createProduct(storeId, body, store, handle!);
+
+          if (data.options) {
+            const optionValues = await createOptionsAndValues(body, product.id);
+
+            if (body.variants)
+              await createVariants(body, product, store, optionValues);
+          }
         }
 
         router.push(`/store/${params.storeId}/products`);
