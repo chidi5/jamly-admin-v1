@@ -26,6 +26,7 @@ type PaymentConnectFormProps = {
   initialData: PaymentConfig | undefined;
   provider: string;
   storeId: string;
+  setIsSaved: any;
 };
 
 const formSchema = z.object({
@@ -40,6 +41,7 @@ const PaymentConnectForm = ({
   initialData,
   provider,
   storeId,
+  setIsSaved,
 }: PaymentConnectFormProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -92,10 +94,11 @@ const PaymentConnectForm = ({
       } else {
         await axios.post(`/api/${storeId}/payment-config`, newData);
       }
-      setClose();
+      setIsSaved(true);
       router.push(`/store/${storeId}/settings/payment`);
       router.refresh();
       toast({ description: toastMessage });
+      setClose();
     } catch (error: any) {
       toast({
         variant: "destructive",

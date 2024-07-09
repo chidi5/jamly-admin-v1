@@ -77,7 +77,7 @@ export async function POST(
           provider,
           publicKey,
           secretKey: JSON.stringify(encryptedSecretKey),
-          isActive,
+          isActive: true,
         },
       }),
     ]);

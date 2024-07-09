@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import PaymentConnectForm from "../components/payment-connect-form";
+import { useRouter } from "next/navigation";
 
 type StoreWithPaymentConfigs = Store & {
   paymentConfigs: PaymentConfig[];
@@ -22,8 +23,10 @@ type PaymentFormProps = {
 };
 
 const PaymentForm = ({ store }: PaymentFormProps) => {
+  const router = useRouter();
   const { setOpen } = useModal();
   const [paymentConfigs, setPaymentConfigs] = useState<PaymentConfig[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const fetchPaymentConfigs = async () => {
@@ -32,7 +35,10 @@ const PaymentForm = ({ store }: PaymentFormProps) => {
     };
 
     fetchPaymentConfigs();
-  }, [store.id]);
+    if (isSaved) {
+      router.push(`/store/${store.id}/settings/payment`);
+    }
+  }, [store.id, isSaved]);
 
   function getPaymentOptionsForCountry(store: Store, paymentOptions: any) {
     const country = store.country!;
@@ -59,6 +65,7 @@ const PaymentForm = ({ store }: PaymentFormProps) => {
           initialData={paymentConfig}
           provider={name}
           storeId={store.id}
+          setIsSaved={setIsSaved}
         />
       </CustomModal>
     );
