@@ -82,6 +82,9 @@ import {
   createProduct,
   createVariants,
   fetchStoreAndGenerateHandle,
+  updateOptionsAndValues,
+  updateProduct,
+  updateVariants,
   validateAndInitialize,
 } from "@/lib/queries/product";
 import { createOptionsAndValues, getStoreByUserId } from "@/lib/queries";
@@ -95,16 +98,6 @@ interface Variant {
   stock: Stock | null;
   selectedOptions: { option: { name: string }; value: any }[];
 }
-
-// interface OptionValue {
-
-// }
-
-// interface Option {
-//   id: string;
-//   name: string;
-//   productId: string;
-// }
 
 type ProductFormProps = {
   initialData:
@@ -462,14 +455,31 @@ const ProductForm = ({
     startTransition(async () => {
       try {
         if (initialData) {
-          console.log(data);
-          await axios.patch(
-            `/api/${params.storeId}/products/${params.productId}`,
-            data
+          const { user, body } = await validateAndInitialize(data);
+          const { store, handle } = await fetchStoreAndGenerateHandle(
+            storeId,
+            body
           );
+          await getStoreByUserId(storeId, user!.id);
+
+          const updatedProduct = await updateProduct(
+            storeId,
+            initialData.id,
+            body,
+            store,
+            handle!
+          );
+
+          if (data.options) {
+            const optionValues = await updateOptionsAndValues(
+              body,
+              updatedProduct.id
+            );
+
+            if (body.variants)
+              await updateVariants(body, updatedProduct, store, optionValues);
+          }
         } else {
-          console.log(data);
-          //await axios.post(`/api/${params.storeId}/products`, data);
           const { user, body } = await validateAndInitialize(data);
           const { store, handle } = await fetchStoreAndGenerateHandle(
             storeId,
