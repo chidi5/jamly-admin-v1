@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@/hooks/use-current-user";
 import prismadb from "@/lib/prismadb";
 import {
-  createOptionsAndValues,
   generateUniqueProductHandle,
   getStoreByUserId,
   validateProductData,
@@ -212,6 +211,7 @@ export async function PATCH(
 
         console.log("Updating options and values...");
         const optionValues = await createOptionsAndValues(
+          prisma,
           body,
           updatedProduct.id
         );
@@ -403,6 +403,38 @@ async function updateProductCategories(
       },
     });
   }
+}
+
+export async function createOptionsAndValues(
+  prisma: any,
+  data: { options: any },
+  productId: string
+) {
+  const optionData: any[] = [];
+  for (const option of data.options) {
+    const newOption = await prisma.option.create({
+      data: { productId: productId, name: option.name },
+    });
+    optionData.push(
+      ...option.values.map((value: { value: any }) => ({
+        value: value.value,
+        optionId: newOption.id,
+      }))
+    );
+  }
+  if (optionData.length) {
+    await prisma.optionValue.createMany({
+      data: optionData,
+      skipDuplicates: true,
+    });
+  }
+
+  const promises = optionData.map((optionValue) =>
+    prisma.optionValue.findFirst({ where: optionValue })
+  );
+  const optionValues = await Promise.all(promises);
+
+  return optionValues;
 }
 
 async function updateProductVariants(
