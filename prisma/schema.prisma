@@ -264,6 +264,7 @@ model Variant {
   selectedOptions   OptionValue[]      @relation("VariantOptions")
 
   @@index([productId])
+  @@unique([productId, title])
 }
 
 model Option {
