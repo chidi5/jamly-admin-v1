@@ -463,22 +463,21 @@ const ProductForm = ({
           await getStoreByUserId(storeId, user!.id);
 
           const updatedProduct = await updateProduct(
-            storeId,
             initialData.id,
             body,
             store,
             handle!
           );
 
-          // if (data.options) {
-          //   const optionValues = await updateOptionsAndValues(
-          //     body,
-          //     updatedProduct.id
-          //   );
+          if (data.options) {
+            const optionValues = await updateOptionsAndValues(
+              body,
+              updatedProduct.id
+            );
 
-          //   if (body.variants)
-          //     await updateVariants(body, updatedProduct, store, optionValues);
-          // }
+            if (body.variants)
+              await updateVariants(body, updatedProduct, store, optionValues);
+          }
         } else {
           const { user, body } = await validateAndInitialize(data);
           const { store, handle } = await fetchStoreAndGenerateHandle(

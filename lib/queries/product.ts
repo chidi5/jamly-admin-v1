@@ -188,140 +188,7 @@ export async function createVariants(
 
 //update
 
-// export async function updateProduct(
-//   storeId: string,
-//   productId: string,
-//   body: any,
-//   store: any,
-//   handle: string
-// ) {
-//   const existingProduct = await prismadb.product.findUnique({
-//     where: { id: productId },
-//     include: {
-//       images: true,
-//       priceData: true,
-//       costAndProfitData: true,
-//       stock: true,
-//       discount: true,
-//       additionalInfoSections: true,
-//       categories: true,
-//       options: true,
-//       variants: true,
-//     },
-//   });
-
-//   if (!existingProduct)
-//     throw new Error(JSON.stringify({ message: "Product not found" }));
-
-//   const updatedProduct = await prismadb.product.update({
-//     where: { id: productId },
-//     data: {
-//       name: body.name,
-//       handle:
-//         body.name !== existingProduct.name ? handle : existingProduct.handle,
-//       description: body.description,
-//       isFeatured: body.isFeatured,
-//       isArchived: body.isArchived,
-//       manageVariants: body.manageVariants,
-//       weight: body.weight,
-//       priceData: {
-//         update: {
-//           price: body.price,
-//           discountedPrice: body.discountedPrice ?? null,
-//           currency: store.defaultCurrency,
-//         },
-//       },
-//       costAndProfitData: body.costProfit
-//         ? {
-//             upsert: {
-//               create: {
-//                 itemCost: body.costProfit.itemCost ?? 0,
-//                 profit: body.costProfit.profit,
-//                 profitMargin: body.costProfit.profitMargin,
-//                 formattedItemCost:
-//                   store.defaultCurrency +
-//                   (body.costProfit.itemCost?.toFixed(2) || "0.00"),
-//                 formattedProfit:
-//                   store.defaultCurrency +
-//                   (body.costProfit.profit?.toFixed(2) || "0.00"),
-//               },
-//               update: {
-//                 itemCost: body.costProfit.itemCost ?? 0,
-//                 profit: body.costProfit.profit,
-//                 profitMargin: body.costProfit.profitMargin,
-//                 formattedItemCost:
-//                   store.defaultCurrency +
-//                   (body.costProfit.itemCost?.toFixed(2) || "0.00"),
-//                 formattedProfit:
-//                   store.defaultCurrency +
-//                   (body.costProfit.profit?.toFixed(2) || "0.00"),
-//               },
-//             },
-//           }
-//         : undefined,
-//       stock: body.manageVariants
-//         ? {
-//             delete: existingProduct.stock ? true : undefined,
-//           }
-//         : body.stock
-//         ? {
-//             upsert: {
-//               create: {
-//                 trackInventory: body.stock.trackInventory,
-//                 quantity: body.stock.quantity ?? null,
-//                 inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
-//               },
-//               update: {
-//                 trackInventory: body.stock.trackInventory,
-//                 quantity: body.stock.quantity ?? null,
-//                 inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
-//               },
-//             },
-//           }
-//         : undefined,
-//       discount:
-//         body.discount && body.discount.value !== undefined
-//           ? {
-//               upsert: {
-//                 create: {
-//                   value: body.discount.value,
-//                   type: body.discount.type,
-//                 },
-//                 update: {
-//                   value: body.discount.value,
-//                   type: body.discount.type,
-//                 },
-//               },
-//             }
-//           : {},
-//       images: {
-//         deleteMany: {},
-//         createMany: {
-//           data: body.images.map((image: { url: string }) => ({
-//             url: image.url,
-//           })),
-//         },
-//       },
-//       additionalInfoSections: {
-//         deleteMany: {},
-//         create: body.additionalInfoSections?.map(
-//           (info: { title: string; description: string }) => ({
-//             title: info.title,
-//             description: info.description,
-//           })
-//         ),
-//       },
-//       categories: {
-//         set: body.categories?.map((id: string) => ({ id })),
-//       },
-//     },
-//   });
-
-//   return updatedProduct;
-// }
-
 export async function updateProduct(
-  storeId: string,
   productId: string,
   body: any,
   store: any,
@@ -345,130 +212,119 @@ export async function updateProduct(
   if (!existingProduct)
     throw new Error(JSON.stringify({ message: "Product not found" }));
 
-  const updates = {
-    name: body.name,
-    handle:
-      body.name !== existingProduct.name ? handle : existingProduct.handle,
-    description: body.description,
-    isFeatured: body.isFeatured,
-    isArchived: body.isArchived,
-    manageVariants: body.manageVariants,
-    weight: body.weight,
-    priceData: {
-      update: {
-        price: body.price,
-        discountedPrice: body.discountedPrice ?? null,
-        currency: store.defaultCurrency,
+  const updatedProduct = await prismadb.product.update({
+    where: { id: productId },
+    data: {
+      name: body.name,
+      handle:
+        body.name !== existingProduct.name ? handle : existingProduct.handle,
+      description: body.description,
+      isFeatured: body.isFeatured,
+      isArchived: body.isArchived,
+      manageVariants: body.manageVariants,
+      weight: body.weight,
+      priceData: {
+        update: {
+          price: body.price,
+          discountedPrice: body.discountedPrice ?? null,
+          currency: store.defaultCurrency,
+        },
       },
-    },
-    costAndProfitData: body.costProfit
-      ? {
-          upsert: {
-            create: {
-              itemCost: body.costProfit.itemCost ?? 0,
-              profit: body.costProfit.profit,
-              profitMargin: body.costProfit.profitMargin,
-              formattedItemCost:
-                store.defaultCurrency +
-                (body.costProfit.itemCost?.toFixed(2) || "0.00"),
-              formattedProfit:
-                store.defaultCurrency +
-                (body.costProfit.profit?.toFixed(2) || "0.00"),
-            },
-            update: {
-              itemCost: body.costProfit.itemCost ?? 0,
-              profit: body.costProfit.profit,
-              profitMargin: body.costProfit.profitMargin,
-              formattedItemCost:
-                store.defaultCurrency +
-                (body.costProfit.itemCost?.toFixed(2) || "0.00"),
-              formattedProfit:
-                store.defaultCurrency +
-                (body.costProfit.profit?.toFixed(2) || "0.00"),
-            },
-          },
-        }
-      : undefined,
-    stock: body.manageVariants
-      ? {
-          delete: existingProduct.stock ? true : undefined,
-        }
-      : body.stock
-      ? {
-          upsert: {
-            create: {
-              trackInventory: body.stock.trackInventory,
-              quantity: body.stock.quantity ?? null,
-              inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
-            },
-            update: {
-              trackInventory: body.stock.trackInventory,
-              quantity: body.stock.quantity ?? null,
-              inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
-            },
-          },
-        }
-      : undefined,
-    discount:
-      body.discount && body.discount.value !== undefined
+      costAndProfitData: body.costProfit
         ? {
             upsert: {
               create: {
-                value: body.discount.value,
-                type: body.discount.type,
+                itemCost: body.costProfit.itemCost ?? 0,
+                profit: body.costProfit.profit,
+                profitMargin: body.costProfit.profitMargin,
+                formattedItemCost:
+                  store.defaultCurrency +
+                  (body.costProfit.itemCost?.toFixed(2) || "0.00"),
+                formattedProfit:
+                  store.defaultCurrency +
+                  (body.costProfit.profit?.toFixed(2) || "0.00"),
               },
               update: {
-                value: body.discount.value,
-                type: body.discount.type,
+                itemCost: body.costProfit.itemCost ?? 0,
+                profit: body.costProfit.profit,
+                profitMargin: body.costProfit.profitMargin,
+                formattedItemCost:
+                  store.defaultCurrency +
+                  (body.costProfit.itemCost?.toFixed(2) || "0.00"),
+                formattedProfit:
+                  store.defaultCurrency +
+                  (body.costProfit.profit?.toFixed(2) || "0.00"),
               },
             },
           }
-        : {},
-    images: {
-      deleteMany: {},
-      createMany: {
-        data: body.images.map((image: { url: string }) => ({
-          url: image.url,
-        })),
+        : undefined,
+      stock: body.manageVariants
+        ? {
+            delete: existingProduct.stock ? true : undefined,
+          }
+        : body.stock
+        ? {
+            upsert: {
+              create: {
+                trackInventory: body.stock.trackInventory,
+                quantity: body.stock.quantity ?? null,
+                inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
+              },
+              update: {
+                trackInventory: body.stock.trackInventory,
+                quantity: body.stock.quantity ?? null,
+                inventoryStatus: body.stock.inventoryStatus ?? "IN_STOCK",
+              },
+            },
+          }
+        : undefined,
+      discount:
+        body.discount && body.discount.value !== undefined
+          ? {
+              upsert: {
+                create: {
+                  value: body.discount.value,
+                  type: body.discount.type,
+                },
+                update: {
+                  value: body.discount.value,
+                  type: body.discount.type,
+                },
+              },
+            }
+          : {},
+      images: {
+        deleteMany: {},
+        createMany: {
+          data: body.images.map((image: { url: string }) => ({
+            url: image.url,
+          })),
+        },
+      },
+      additionalInfoSections: {
+        deleteMany: {},
+        create: body.additionalInfoSections?.map(
+          (info: { title: string; description: string }) => ({
+            title: info.title,
+            description: info.description,
+          })
+        ),
+      },
+      categories: {
+        set: body.categories?.map((id: string) => ({ id })),
       },
     },
-    additionalInfoSections: {
-      deleteMany: {},
-      create: body.additionalInfoSections?.map(
-        (info: { title: string; description: string }) => ({
-          title: info.title,
-          description: info.description,
-        })
-      ),
-    },
-    categories: {
-      set: body.categories?.map((id: string) => ({ id })),
-    },
-  };
-
-  // Execute the update in parallel with other operations
-  const updatedProduct = await prismadb.product.update({
-    where: { id: productId },
-    data: updates,
   });
-
-  // Perform option and variant updates in parallel
-  await Promise.all([
-    body.options && prismadb.option.deleteMany({ where: { productId } }),
-    body.variants && prismadb.variant.deleteMany({ where: { productId } }),
-    body.variants &&
-      updateVariants(body, updatedProduct, updatedProduct.id, store),
-  ]);
 
   return updatedProduct;
 }
 
 export async function updateOptionsAndValues(body: any, productId: string) {
-  //   if (body.options) {
-  //     await prismadb.option.deleteMany({
-  //       where: { productId: productId },
-  //     });
-  //   }
+  if (body.options) {
+    await prismadb.option.deleteMany({
+      where: { productId: productId },
+    });
+  }
 
   const optionValues = await createOptionsAndValuess(body, productId);
 
@@ -478,20 +334,16 @@ export async function updateOptionsAndValues(body: any, productId: string) {
 export async function updateVariants(
   body: any,
   product: any,
-  id: string,
-  store: any
+  store: any,
+  optionValues: any
 ) {
-  //   if (body.variants) {
-  //     await prismadb.variant.deleteMany({
-  //       where: { productId: product.id },
-  //     });
+  if (body.variants) {
+    await prismadb.variant.deleteMany({
+      where: { productId: product.id },
+    });
 
-  //     await createVariants(body, product, store, optionValues);
-  //   }
-
-  const optionValues = await updateOptionsAndValues(body, id);
-
-  await createVariants(body, product, store, optionValues);
+    await createVariants(body, product, store, optionValues);
+  }
 }
 
 export async function createOptionsAndValuess(
