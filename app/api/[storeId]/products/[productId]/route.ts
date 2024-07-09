@@ -175,9 +175,9 @@ export async function PATCH(
 
     const transaction = await prismadb.$transaction(
       async (prisma) => {
-        const start = Date.now();
+        console.time("Transaction");
 
-        console.log("Updating basic product info...");
+        console.time("updateBasicProductInfo");
         const updatedProduct = await updateBasicProductInfo(
           prisma,
           body,
@@ -185,39 +185,38 @@ export async function PATCH(
           store.defaultCurrency,
           existingProduct
         );
-        console.log(`Updated product info in ${Date.now() - start}ms`);
+        console.timeEnd("updateBasicProductInfo");
 
-        console.log("Updating product images...");
-        await updateProductImages(prisma, body.images, params.productId);
-        console.log(`Updated product images in ${Date.now() - start}ms`);
-
-        console.log("Updating additional info sections...");
-        await updateAdditionalInfoSections(
+        // Concurrent execution
+        const updateImagesPromise = updateProductImages(
+          prisma,
+          body.images,
+          params.productId
+        );
+        const updateAdditionalInfoPromise = updateAdditionalInfoSections(
           prisma,
           body.additionalInfoSections,
           params.productId
         );
-        console.log(
-          `Updated additional info sections in ${Date.now() - start}ms`
-        );
-
-        console.log("Updating product categories...");
-        await updateProductCategories(
+        const updateCategoriesPromise = updateProductCategories(
           prisma,
           body.categories,
           params.productId
         );
-        console.log(`Updated product categories in ${Date.now() - start}ms`);
-
-        console.log("Updating options and values...");
-        const optionValues = await createOptionsAndValues(
+        const createOptionsAndValuesPromise = createOptionsAndValues(
           prisma,
           body,
           updatedProduct.id
         );
-        console.log(`Updated options and values in ${Date.now() - start}ms`);
 
-        console.log("Updating product variants...");
+        await Promise.all([
+          updateImagesPromise,
+          updateAdditionalInfoPromise,
+          updateCategoriesPromise,
+        ]);
+
+        const optionValues = await createOptionsAndValuesPromise;
+
         await updateProductVariants(
           prisma,
           body.variants,
@@ -225,13 +224,14 @@ export async function PATCH(
           optionValues,
           store.defaultCurrency
         );
-        console.log(`Updated product variants in ${Date.now() - start}ms`);
+
+        console.timeEnd("Transaction");
 
         return updatedProduct;
       },
       {
-        maxWait: 100000,
-        timeout: 100000,
+        maxWait: 20000,
+        timeout: 40000,
       }
     );
 
@@ -248,7 +248,6 @@ export async function PATCH(
 }
 
 // Functions for each part of the update process
-
 async function updateBasicProductInfo(
   prisma: any,
   body: any,
@@ -433,7 +432,6 @@ async function createOptionsAndValues(
     prisma.optionValue.findFirst({ where: optionValue })
   );
   const optionValues = await Promise.all(promises);
-
   return optionValues;
 }
 
@@ -444,10 +442,6 @@ async function updateProductVariants(
   optionValues: any[],
   defaultCurrency: string
 ) {
-  await prisma.variant.deleteMany({
-    where: { productId: productId },
-  });
-
   if (variants && variants.length > 0) {
     for (const variant of variants) {
       const selectedOptionValues = getSelectedOptionValues(
@@ -455,24 +449,80 @@ async function updateProductVariants(
         optionValues
       );
 
-      await prisma.variant.create({
-        data: {
+      await prisma.variant.upsert({
+        where: {
+          productId_title: { productId: productId, title: variant.title },
+        },
+        update: {
+          sku: variant.sku,
+          barcode: variant.barcode,
+          weight: variant.weight,
+          priceData: {
+            update: {
+              price: variant.price,
+              discountedPrice: variant.discountedPrice ?? null,
+              currency: defaultCurrency,
+            },
+          },
+          costAndProfitData: variant.costofgoods
+            ? {
+                upsert: {
+                  create: {
+                    costOfGoods: variant.costofgoods,
+                    profit: calculateProfit(variant, defaultCurrency),
+                    profitMargin: calculateProfitMargin(variant),
+                    formattedProfit: formatCurrency(
+                      calculateProfit(variant, defaultCurrency),
+                      defaultCurrency
+                    ),
+                  },
+                  update: {
+                    costOfGoods: variant.costofgoods,
+                    profit: calculateProfit(variant, defaultCurrency),
+                    profitMargin: calculateProfitMargin(variant),
+                    formattedProfit: formatCurrency(
+                      calculateProfit(variant, defaultCurrency),
+                      defaultCurrency
+                    ),
+                  },
+                },
+              }
+            : undefined,
+          stock:
+            variant.inventory || variant.status
+              ? {
+                  upsert: {
+                    create: {
+                      trackInventory: variant.inventory ? true : false,
+                      quantity: variant.inventory ?? 0,
+                      inventoryStatus: variant.status ?? "IN_STOCK",
+                    },
+                    update: {
+                      trackInventory: variant.inventory ? true : false,
+                      quantity: variant.inventory ?? 0,
+                      inventoryStatus: variant.status ?? "IN_STOCK",
+                    },
+                  },
+                }
+              : undefined,
+          selectedOptions: { connect: selectedOptionValues },
+        },
+        create: {
           title: variant.title,
+          sku: variant.sku,
+          barcode: variant.barcode,
+          weight: variant.weight,
           priceData: {
             create: {
               price: variant.price,
-              discountedPrice: variant.discountedPrice,
+              discountedPrice: variant.discountedPrice ?? null,
               currency: defaultCurrency,
             },
           },
           costAndProfitData: variant.costofgoods
             ? {
                 create: {
-                  itemCost: variant.costofgoods,
-                  formattedItemCost: formatCurrency(
-                    variant.costofgoods,
-                    defaultCurrency
-                  ),
+                  costOfGoods: variant.costofgoods,
                   profit: calculateProfit(variant, defaultCurrency),
                   profitMargin: calculateProfitMargin(variant),
                   formattedProfit: formatCurrency(
