@@ -230,8 +230,8 @@ export async function PATCH(
         return updatedProduct;
       },
       {
-        maxWait: 20000,
-        timeout: 40000,
+        maxWait: 100000,
+        timeout: 100000,
       }
     );
 
