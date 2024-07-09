@@ -28,3 +28,20 @@ export async function getCountryCodeByIP(): Promise<CountryData> {
     language: response.data.languages.split(",")[0],
   };
 }
+
+export function getSelectedOptionValues(
+  title: string,
+  optionValues: any[]
+): any[] {
+  return title.includes("|")
+    ? title.split("|").map((value: string) => {
+        const matchingOptionValue = optionValues.find(
+          (data) => data!.value === value
+        );
+        if (!matchingOptionValue) {
+          return { error: `Option value "${value}" not found` };
+        }
+        return { id: matchingOptionValue.id };
+      })
+    : [{ id: optionValues.find((data) => data!.value === title)!.id }];
+}

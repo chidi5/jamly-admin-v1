@@ -6,6 +6,7 @@ import {
   generateUniqueProductHandle,
   validateProductData,
 } from "@/lib/queries";
+import { getSelectedOptionValues } from "../utils";
 
 export async function validateAndInitialize(data: any) {
   const user = await currentUser();
@@ -116,23 +117,6 @@ export async function createProduct(
   });
 
   return product;
-}
-
-export function getSelectedOptionValues(
-  title: string,
-  optionValues: any[]
-): any[] {
-  return title.includes("|")
-    ? title.split("|").map((value: string) => {
-        const matchingOptionValue = optionValues.find(
-          (data) => data!.value === value
-        );
-        if (!matchingOptionValue) {
-          return { error: `Option value "${value}" not found` };
-        }
-        return { id: matchingOptionValue.id };
-      })
-    : [{ id: optionValues.find((data) => data!.value === title)!.id }];
 }
 
 export async function createVariants(
