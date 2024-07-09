@@ -456,7 +456,8 @@ export async function updateProduct(
   await Promise.all([
     body.options && prismadb.option.deleteMany({ where: { productId } }),
     body.variants && prismadb.variant.deleteMany({ where: { productId } }),
-    body.variants && updateVariants(body, updatedProduct, store),
+    body.variants &&
+      updateVariants(body, updatedProduct, updatedProduct.id, store),
   ]);
 
   return updatedProduct;
@@ -469,12 +470,17 @@ export async function updateOptionsAndValues(body: any, productId: string) {
   //     });
   //   }
 
-  const optionValues = await createOptionsAndValues(body, productId);
+  const optionValues = await createOptionsAndValuess(body, productId);
 
   return optionValues;
 }
 
-export async function updateVariants(body: any, product: any, store: any) {
+export async function updateVariants(
+  body: any,
+  product: any,
+  id: string,
+  store: any
+) {
   //   if (body.variants) {
   //     await prismadb.variant.deleteMany({
   //       where: { productId: product.id },
@@ -483,7 +489,64 @@ export async function updateVariants(body: any, product: any, store: any) {
   //     await createVariants(body, product, store, optionValues);
   //   }
 
-  const optionValues = await updateOptionsAndValues(body, product.id);
+  const optionValues = await updateOptionsAndValues(body, id);
 
   await createVariants(body, product, store, optionValues);
+}
+
+export async function createOptionsAndValuess(
+  data: { options: any },
+  productId: string
+) {
+  // Prepare data for options and optionValues
+  const optionsData = data.options.map((option: any) => ({
+    name: option.name,
+    productId: productId,
+  }));
+
+  // Create options in bulk
+  const createdOptions = await prismadb.option.createMany({
+    data: optionsData,
+    skipDuplicates: true,
+  });
+
+  // Fetch the created options to get their IDs
+  const fetchedOptions = await prismadb.option.findMany({
+    where: { productId: productId },
+  });
+
+  // Prepare data for optionValues with the correct option IDs
+  const optionValuesData: any[] = [];
+  fetchedOptions.forEach((option) => {
+    const matchingOption = data.options.find(
+      (opt: any) => opt.name === option.name
+    );
+    if (matchingOption) {
+      optionValuesData.push(
+        ...matchingOption.values.map((value: any) => ({
+          value: value.value,
+          optionId: option.id,
+        }))
+      );
+    }
+  });
+
+  // Create option values in bulk
+  if (optionValuesData.length) {
+    await prismadb.optionValue.createMany({
+      data: optionValuesData,
+      skipDuplicates: true,
+    });
+  }
+
+  // Fetch and return the created option values
+  const optionValues = await prismadb.optionValue.findMany({
+    where: {
+      optionId: {
+        in: fetchedOptions.map((option) => option.id),
+      },
+    },
+  });
+
+  return optionValues;
 }
