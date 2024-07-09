@@ -405,7 +405,7 @@ async function updateProductCategories(
   }
 }
 
-export async function createOptionsAndValues(
+async function createOptionsAndValues(
   prisma: any,
   data: { options: any },
   productId: string
