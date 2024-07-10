@@ -201,6 +201,7 @@ export async function POST(
     });
   }
 }
+
 export async function GET(
   req: Request,
   { params }: { params: { storeId: string } }
@@ -209,6 +210,7 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const categoryIds = searchParams.get("categoryId")?.split(",") || undefined;
     const isFeatured = searchParams.get("isFeatured");
+    const limit = searchParams.get("limit");
 
     if (!params.storeId) {
       return new NextResponse(
@@ -261,6 +263,7 @@ export async function GET(
       orderBy: {
         createdAt: "desc",
       },
+      take: limit ? parseInt(limit) : undefined,
     });
 
     return NextResponse.json(products);
