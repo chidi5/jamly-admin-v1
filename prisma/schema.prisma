@@ -13,7 +13,6 @@ generator client {
 //   url      = env("DATABASE_URL")
 // }
 
-
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
@@ -242,12 +241,15 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
+  id        String   @id @default(uuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   price     Decimal
+  quantity  Int?
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant   Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([productId])
@@ -262,9 +264,10 @@ model Variant {
   costAndProfitData CostAndProfitData?
   stock             Stock?
   selectedOptions   OptionValue[]      @relation("VariantOptions")
+  orderItems        OrderItem[]
 
-  @@index([productId])
   @@unique([productId, title])
+  @@index([productId])
 }
 
 model Option {
