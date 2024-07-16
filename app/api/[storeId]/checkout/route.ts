@@ -89,16 +89,6 @@ export async function POST(
       callback_url: `${origin}/checkout/success`,
     };
 
-    console.log({
-      products,
-      amount,
-      customerId,
-      email,
-      phone,
-      address,
-      paymentData,
-    });
-
     const response = await paystack.transaction.initialize(paymentData);
     const authorizationUrl = response.data?.authorization_url;
 
