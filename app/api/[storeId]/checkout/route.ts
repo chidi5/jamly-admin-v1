@@ -29,15 +29,12 @@ export async function POST(
   { params }: { params: { storeId: string } }
 ) {
   try {
-    const { products, amount, customerId, phone, address } = await req.json();
+    const { products, amount, customerId, email, phone, address } =
+      await req.json();
     const origin = req.headers.get("origin") ?? "";
 
     if (!products || products.length === 0) {
       return new NextResponse("Products are required", { status: 400 });
-    }
-
-    if (!customerId) {
-      return new NextResponse("Customer ID is required", { status: 400 });
     }
 
     if (!amount) {
@@ -47,12 +44,15 @@ export async function POST(
     const secretKey = await fetchPaystackKey(params.storeId);
     const paystack = new Paystack(secretKey);
 
-    const customer = await prismadb.customer.findUnique({
-      where: { id: customerId },
-    });
+    let customer;
+    if (customerId) {
+      customer = await prismadb.customer.findUnique({
+        where: { id: customerId },
+      });
 
-    if (!customer) {
-      return new NextResponse("Customer not found", { status: 404 });
+      if (!customer) {
+        return new NextResponse("Customer not found", { status: 404 });
+      }
     }
 
     const productIds = products.map((product: any) => product.id);
@@ -84,10 +84,20 @@ export async function POST(
 
     const paymentData = {
       amount: (amount * 100).toString(), // Paystack expects amount in kobo
-      email: customer.email,
+      email: customerId ? customer?.email : email,
       metadata: { products: formattedProducts },
       callback_url: `${origin}/checkout/success`,
     };
+
+    console.log({
+      products,
+      amount,
+      customerId,
+      email,
+      phone,
+      address,
+      paymentData,
+    });
 
     const response = await paystack.transaction.initialize(paymentData);
     const authorizationUrl = response.data?.authorization_url;
