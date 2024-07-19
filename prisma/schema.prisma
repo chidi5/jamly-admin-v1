@@ -241,15 +241,16 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  price     Decimal
-  quantity  Int?
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variantId String?
-  variant   Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  id              String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  price           Decimal
+  quantity        Int?
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId       String?
+  variant         Variant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  selectedOptions Json?
 
   @@index([orderId])
   @@index([productId])

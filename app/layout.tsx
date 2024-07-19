@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Admin Dashboard",
   description: "Admin Dashboard",
+  icons: {
+    icon: "/assets/plura-logo.svg",
+  },
 };
 
 export default function RootLayout({

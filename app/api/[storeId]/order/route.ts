@@ -76,6 +76,7 @@ export async function POST(
           variant?: string;
           variantQuantity: number;
           variantPrice: number;
+          selectedOptions?: { [key: string]: string };
         }) => {
           const productInfo = productData.find((p) => p.id === product.id);
 
@@ -142,6 +143,7 @@ export async function POST(
               : undefined,
             quantity: product.variantQuantity,
             price: product.variantPrice,
+            selectedOptions: product.selectedOptions,
           };
         }
       )
