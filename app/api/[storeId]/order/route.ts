@@ -18,7 +18,7 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
-    const { products, address, phone, customerId } = body;
+    const { products, guest, address, phone, customerId } = body;
 
     if (!products || products.length === 0) {
       return new NextResponse(
@@ -149,14 +149,33 @@ export async function POST(
       )
     );
 
+    // Get the latest order to determine the next order number
+    const lastOrder = await prismadb.order.findFirst({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        orderNumber: true,
+      },
+    });
+
+    // Generate the next order number
+    let nextOrderNumber = "000001";
+    if (lastOrder && lastOrder.orderNumber) {
+      const currentNumber = parseInt(lastOrder.orderNumber, 10);
+      nextOrderNumber = (currentNumber + 1).toString().padStart(6, "0");
+    }
+
     const order = await prismadb.order.create({
       data: {
         storeId: params.storeId,
         isPaid: true,
         customerId: customerId || null,
+        guest: guest || null,
         phone,
         address: formattedAddress,
         status: "PROCESSING",
+        orderNumber: nextOrderNumber,
         orderItems: {
           create: orderItemsData,
         },

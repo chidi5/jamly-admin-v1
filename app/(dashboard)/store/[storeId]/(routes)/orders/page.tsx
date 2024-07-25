@@ -58,7 +58,8 @@ const OrderPage = async ({ params }: OrderProps) => {
       .join(", "),
     totalPrice: formatter.format(
       item.orderItems.reduce(
-        (total, orderItem) => total + orderItem.price.toNumber(),
+        (total, orderItem) =>
+          total + orderItem.price.toNumber() * orderItem.quantity!,
         0
       )
     ),

@@ -67,7 +67,7 @@ const CustomerDetail = async ({
         status: order.status,
         totalAmount: formatter.format(
           order.orderItems.reduce(
-            (total, item) => total + item.price.toNumber(),
+            (total, item) => total + item.price.toNumber() * item.quantity!,
             0
           )
         ),

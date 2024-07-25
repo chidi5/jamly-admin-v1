@@ -18,6 +18,10 @@ body,
   height: 200px !important;
 }
 
+td[data-column-id="selectedOptions"] {
+  display: none;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
