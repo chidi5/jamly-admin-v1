@@ -28,6 +28,8 @@ export const sendInvitation = async (
 
   const name = `${storeOwner?.firstName} ${storeOwner?.lastName}`;
 
+  const from = `${storeOwner?.email}`;
+
   if (!store) return { error: "Store does not exist!" };
 
   const userAlreadyInStore = store.users.some((user) => user.email === email); // Check if the user is already in the team
@@ -37,7 +39,12 @@ export const sendInvitation = async (
   }
 
   const invitationToken = await generateInvitationToken(email, role, storeId);
-  await sendInvitationEmail(name, invitationToken.email, invitationToken.token);
+  await sendInvitationEmail(
+    name,
+    from,
+    invitationToken.email,
+    invitationToken.token
+  );
 
   return { success: "Invitaion sent!" };
 };

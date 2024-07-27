@@ -217,6 +217,7 @@ export const updateUser = async (data: {
   firstName: string;
   lastName: string;
   image?: string;
+  isTwoFactorEnabled: boolean;
 }) => {
   const user = await getUserbyId(data.userId);
 
@@ -229,6 +230,7 @@ export const updateUser = async (data: {
         image: data.image || null,
         firstName: data.firstName,
         lastName: data.lastName,
+        isTwoFactorEnabled: data.isTwoFactorEnabled,
       },
     });
 

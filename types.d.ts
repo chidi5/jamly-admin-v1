@@ -8,6 +8,7 @@ declare module "next-auth" {
     firstName?: string | null;
     lastName?: string | null;
     role: string;
+    isTwoFactorEnabled?: boolean;
   }
 
   interface Session {
@@ -17,6 +18,7 @@ declare module "next-auth" {
       lastName?: string | null;
       image?: string | null;
       role: string;
+      isTwoFactorEnabled?: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -28,5 +30,6 @@ declare module "next-auth/jwt" {
     lastName?: string | null;
     image?: string | null;
     role: string;
+    isTwoFactorEnabled?: boolean;
   }
 }

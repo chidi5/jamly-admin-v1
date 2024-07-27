@@ -18,18 +18,12 @@ import * as React from "react";
 
 interface EmailTemplateProps {
   confirmLink: string;
-  name: string;
-  from: string;
 }
 
 const baseUrl = process.env.NEXT_PUBLIC_URL;
 
-export const InvitationEmail = ({
-  confirmLink,
-  name,
-  from,
-}: EmailTemplateProps) => {
-  const previewText = `Join ${name} on Jamly`;
+export const ResetPasswordEmail = ({ confirmLink }: EmailTemplateProps) => {
+  const previewText = "Reset your password";
 
   return (
     <Html>
@@ -48,45 +42,22 @@ export const InvitationEmail = ({
               />
             </Section>
             <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-              Join <strong>{name}</strong> on <strong>Jamly</strong>
+              Reset your password
             </Heading>
             <Text className="text-black text-[14px] leading-[24px]">
               Hello,
             </Text>
             <Text className="text-black text-[14px] leading-[24px]">
-              <strong>{name}</strong> (
-              <Link
-                href={`mailto:${from}`}
-                className="text-blue-600 no-underline"
-              >
-                {from}
-              </Link>
-              ) has invited you to join the team on <strong>Jamly</strong>.
+              Click the button below to reset your password.
             </Text>
             <Section>
               <Row>
-                <Column align="right">
-                  <Img
-                    className="rounded-full"
-                    src={`${baseUrl}multiple-users.png`}
-                    width="64"
-                    height="64"
-                  />
-                </Column>
                 <Column align="center">
                   <Img
-                    src={`${baseUrl}right-arrow.png`}
-                    width="12"
-                    height="9"
-                    alt="invited you to"
-                  />
-                </Column>
-                <Column align="left">
-                  <Img
-                    className="rounded-full"
-                    src={`${baseUrl}shopping-bag.png`}
+                    src={`${baseUrl}reset.png`}
                     width="64"
                     height="64"
+                    alt="verify"
                   />
                 </Column>
               </Row>
@@ -96,7 +67,7 @@ export const InvitationEmail = ({
                 className="bg-[#000000] rounded text-white text-[12px] font-semibold no-underline text-center px-5 py-3"
                 href={confirmLink}
               >
-                Join the team
+                Reset password
               </Button>
             </Section>
             <Text className="text-black text-[14px] leading-[24px]">
@@ -104,6 +75,9 @@ export const InvitationEmail = ({
               <Link href={confirmLink} className="text-blue-600 no-underline">
                 {confirmLink}
               </Link>
+            </Text>
+            <Text className="text-black text-[14px] leading-[24px]">
+              Please ignore this email if you did not initiate the request.
             </Text>
           </Container>
         </Body>

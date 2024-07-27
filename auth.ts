@@ -139,6 +139,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role;
       }
 
+      if (token.isTwoFactorEnabled && session.user) {
+        session.user.isTwoFactorEnabled = token.isTwoFactorEnabled;
+      }
+
       return session;
     },
     async jwt({ token, user }) {
@@ -148,6 +152,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.lastName = user.lastName;
         token.role = user.role;
         token.image = user.image;
+        token.isTwoFactorEnabled = user.isTwoFactorEnabled;
       } else if (token.sub) {
         // Subsequent use, token already exists
         const existingUser = await getUserbyId(token.sub);
@@ -157,10 +162,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.lastName = existingUser.lastName ?? "";
           token.role = existingUser.role;
           token.image = existingUser.image;
+          token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
         }
       }
 
       return token;
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      if (url.startsWith("/")) {
+        return new URL(url, baseUrl).toString();
+      }
+      return baseUrl;
     },
   },
   session: {

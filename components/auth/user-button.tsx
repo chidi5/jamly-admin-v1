@@ -5,7 +5,7 @@ import { useUser } from "@/hooks/use-current-user";
 import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
-import Link from "next/link";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Button } from "../ui/button";
 
 export const UserButton = () => {
   const { user } = useUser();
@@ -53,7 +52,12 @@ export const UserButton = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => signOut()}
+            onClick={() =>
+              signOut({
+                callbackUrl: `${process.env.NEXT_PUBLIC_URL}`,
+                redirect: true,
+              })
+            }
             className="flex items-center gap-4 text-muted-foreground"
           >
             <LogOut className="w-5 h-5" />

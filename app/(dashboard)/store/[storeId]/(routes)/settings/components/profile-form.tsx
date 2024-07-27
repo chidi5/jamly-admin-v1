@@ -22,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
 import { z } from "zod";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   firstName: z
@@ -35,6 +36,7 @@ const formSchema = z.object({
     })
     .min(1),
   image: z.optional(z.string()),
+  isTwoFactorEnabled: z.boolean().default(false),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
@@ -51,6 +53,7 @@ const ProfileForm = () => {
       firstName: "",
       lastName: "",
       image: "",
+      isTwoFactorEnabled: false,
     },
   });
 
@@ -60,6 +63,7 @@ const ProfileForm = () => {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         image: user.image || "",
+        isTwoFactorEnabled: user.isTwoFactorEnabled || false,
       });
     }
   }, [form, isLoaded, user]);
@@ -132,6 +136,28 @@ const ProfileForm = () => {
               </FormControl>
               <FormDescription>This is your last name.</FormDescription>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="isTwoFactorEnabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Two factor authentication
+                </FormLabel>
+                <FormDescription>
+                  Enable two factor authentication for added security
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
             </FormItem>
           )}
         />

@@ -254,6 +254,62 @@ export const getTotalStock = async (storeId: string) => {
   return totalStock;
 };
 
+export const getCustomerCount = async (storeId: string) => {
+  const customerCount = await prismadb.customer.count({
+    where: { stores: { some: { id: storeId } } },
+  });
+
+  return customerCount;
+};
+
+export const recentSales = async (storeId: string) => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // Get recent sales
+  const recentSales = await prismadb.orderItem.findMany({
+    where: {
+      order: {
+        storeId,
+        createdAt: {
+          gte: thirtyDaysAgo,
+        },
+        isPaid: true,
+      },
+    },
+    select: {
+      product: {
+        select: {
+          name: true,
+          images: {
+            select: {
+              url: true,
+            },
+            take: 1, // Get the first image
+          },
+        },
+      },
+      price: true,
+      quantity: true,
+    },
+    orderBy: {
+      order: {
+        createdAt: "desc",
+      },
+    },
+  });
+
+  // Calculate the total amount paid and format the result
+  const salesData = recentSales.map((item) => ({
+    productName: item.product.name,
+    productImage: item.product.images[0]?.url ?? "",
+    totalAmountPaid: item.price.toNumber() * (item.quantity ?? 1),
+    quantity: item.quantity ?? 1,
+  }));
+
+  return salesData;
+};
+
 //product setup
 export async function validateProductData(
   body: ProductData
