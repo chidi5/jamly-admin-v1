@@ -14,7 +14,7 @@ const RecentSales = ({ data }: RecentSalesProps) => {
   return (
     <>
       {data.map((item) => (
-        <div className="flex items-center gap-4">
+        <div key={item.productName} className="flex items-center gap-4">
           <Avatar className="hidden h-9 w-9 sm:flex">
             <AvatarImage
               src={item.productImage}
