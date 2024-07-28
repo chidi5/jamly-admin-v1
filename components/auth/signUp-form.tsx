@@ -92,11 +92,7 @@ export const SignUpForm = () => {
                 <FormItem>
                   <FormLabel>First name</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="First name"
-                      {...field}
-                    />
+                    <Input disabled={loading} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,11 +105,7 @@ export const SignUpForm = () => {
                 <FormItem>
                   <FormLabel>Last name</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Last name"
-                      {...field}
-                    />
+                    <Input disabled={loading} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,12 +119,7 @@ export const SignUpForm = () => {
               <FormItem>
                 <FormLabel>Email address</FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    disabled={loading}
-                    placeholder="Email address"
-                    {...field}
-                  />
+                  <Input type="email" disabled={loading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -149,7 +136,6 @@ export const SignUpForm = () => {
                     <Input
                       type={showPassword ? "text" : "password"}
                       disabled={loading}
-                      placeholder="Password"
                       {...field}
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">

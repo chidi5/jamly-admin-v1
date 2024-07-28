@@ -111,12 +111,7 @@ export const SignInForm = () => {
                   <FormItem>
                     <FormLabel>Email address</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        disabled={loading}
-                        placeholder="Email address"
-                        {...field}
-                      />
+                      <Input type="email" disabled={loading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,7 +140,6 @@ export const SignInForm = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           disabled={loading}
-                          placeholder="Password"
                           {...field}
                         />
                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
