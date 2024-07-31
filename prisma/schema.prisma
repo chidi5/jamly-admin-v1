@@ -124,6 +124,8 @@ model Store {
   paymentConfigs  PaymentConfig[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+
+  domains Domain[]
 }
 
 model Customer {
@@ -416,4 +418,13 @@ model PaymentConfig {
 
   @@unique([storeId, provider])
   @@index([storeId])
+}
+
+model Domain {
+  id                 String   @id @default(uuid())
+  storeId            String
+  store              Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  domain             String   @unique
+  verificationStatus String   @default("pending")
+  createdAt          DateTime @default(now())
 }

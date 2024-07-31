@@ -11,12 +11,13 @@ import {
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { PaymentConfig, Store } from "@prisma/client";
+import { Domain, PaymentConfig, Store } from "@prisma/client";
 import { CheckCircleIcon, Dot } from "lucide-react";
 import Link from "next/link";
 
 type StoreWithPaymentConfigs = Store & {
   paymentConfigs: PaymentConfig[];
+  domains: Domain[];
 };
 
 type LaunchPadClientProps = {
@@ -67,7 +68,7 @@ const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
                 ) : (
                   <Link
                     className={cn(buttonVariants({ variant: "outline" }))}
-                    href="settings/payment"
+                    href={`/store/${store.id}/settings/payment`}
                   >
                     Set up Payment
                   </Link>
@@ -108,6 +109,25 @@ const LaunchPadClient = ({ store, product }: LaunchPadClientProps) => {
                     href={`/store/${store.id}/products/new`}
                   >
                     Add Product
+                  </Link>
+                )}
+              </div>
+              <div className="flex justify-between items-center w-full border p-3 rounded-lg gap-2">
+                <div className="flex md:items-center gap-4 flex-row">
+                  <Dot />
+                  <p>Connect custom domain</p>
+                </div>
+                {store.domains.length > 0 ? (
+                  <CheckCircleIcon
+                    size={30}
+                    className=" text-primary p-2 flex-shrink-0"
+                  />
+                ) : (
+                  <Link
+                    className={cn(buttonVariants({ variant: "outline" }))}
+                    href={`/store/${store.id}/settings/domain`}
+                  >
+                    Connect custom domain
                   </Link>
                 )}
               </div>
